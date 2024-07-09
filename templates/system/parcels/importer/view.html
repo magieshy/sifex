@@ -1,0 +1,332 @@
+{% extends 'system/app/index.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% block title %}Parcel Edit{% endblock %}
+
+{% block page %}Parcel Edit{% endblock page %}
+{% block slogan %}Update your parcel{% endblock slogan %} 
+
+{% block style %}
+    <style>
+        .hide-accept-form {
+            display: none;
+        }
+        .hide-response-form {
+            display: none;
+        }
+        .hide-add-form {
+            display: none;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+    
+    </div>
+</div>
+
+
+
+<div class="card">
+    <div class="card-body">
+
+    <form action="{% url 'awb-edit' master_awb.id  %}" enctype="multipart/form-data" method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-3 col-lg-3 col-12">
+                <div class="form-group">
+                    <label for="">{{form.awb.label}}</label>
+                    {{form.awb}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.order_number.label}}</label>
+                    {{form.order_number}}
+                </div>
+            </div>
+        </div>
+    
+        <div class="row">
+            <div class="col-md-3 col-lg-3 col-12">
+                <div class="form-group">
+                    <label for="">{{form.sender_name.label}}</label>
+                    {{form.sender_name}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.sender_address.label}}</label>
+                    {{form.sender_address}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.receiver_name.label}}</label>
+                    {{form.receiver_name}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.receiver_address.label}}</label>
+                    {{form.receiver_address}}
+                </div>
+            </div>
+        </div>
+    
+        <div class="row">
+            <div class="col-md-3 col-lg-3 col-12">
+                <div class="form-group">
+                    <label for="">{{form.sender_tel.label}}</label>
+                    {{form.sender_tel}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.sender_city.label}}</label>
+                    {{form.sender_city}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.receiver_tel.label}}</label>
+                    {{form.receiver_tel}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.receiver_city.label}}</label>
+                    {{form.receiver_city}}
+                </div>
+            </div>
+        </div>
+    
+        <div class="row">
+            <div class="col-md-6 col-lg-6 col-12">
+                <div class="form-group">
+                    <label for="">{{form.sender_country.label}}</label>
+                    {{form.sender_country}}
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-6 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.receiver_country.label}}</label>
+                    {{form.receiver_country}}
+                </div>
+            </div>
+        </div>
+    
+        <div class="row">
+            <div class="col-md-5 col-lg-5 col-12">
+                <div class="form-group">
+                    <label for="">{{form.desc.label}}</label>
+                    {{form.desc}}
+                </div>
+            </div>
+            <div class="col-md-5 col-lg-5 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.freight.label}}</label>
+                    {{form.freight}}
+                </div>
+            </div>
+            <div class="col-md-5 col-lg-5 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.insurance.label}}</label>
+                    {{form.insurance}}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-2 col-lg-2 col-12">
+                <div class="form-group">
+                    <label for="">{{form.awb_pcs.label}}</label>
+                    {{form.awb_pcs}}
+                </div>
+            </div>
+            <div class="col-md-2 col-lg-2 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.awb_kg.label}}</label>
+                    {{form.awb_kg}}
+                </div>
+            </div>
+            <div class="col-md-2 col-lg-2 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.chargable_weight.label}}</label>
+                    {{form.chargable_weight}}
+                </div>
+            </div>
+            <div class="col-md-2 col-lg-2 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.terms.label}}</label>
+                    {{form.terms}}
+                </div>
+            </div>
+        </div>
+    
+        <div class="row">
+            <div class="col-md-3 col-lg-3 col-12">
+                <div class="form-group">
+                    <label for="">{{form.height.label}}</label>
+                    {{form.height}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.width.label}}</label>
+                    {{form.width}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.length.label}}</label>
+                    {{form.length}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.volume.label}}</label>
+                    {{form.volume}}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3 col-lg-3 col-12">
+                <div class="form-group">
+                    <label for="">{{form.date_received.label}}</label>
+                    {{form.date_received}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.expected_arrival_date.label}}</label>
+                    {{form.expected_arrival_date}}
+                </div>
+            </div>
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.currency.label}}</label>
+                    {{form.currency}}
+                </div>
+            </div>
+        </div>
+    
+        <div class="row" >
+            <div class="col-md-6 col-lg-6 col-12">
+                <div class="form-group">
+                    <label for="">{{form.custom_value.label}}</label>
+                    {{form.custom_value}}
+                </div>
+            </div>
+           
+          
+            <div class="col-md-6 col-lg-6 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.payment_mode.label}}</label>
+                    {{form.payment_mode}}
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+    
+   
+    <!-- arr items content -->
+    <form action="{% url 'update_slave_arr' master_awb.id %}" method="POST" class="">
+        {% csrf_token %}
+        <div class="row" style="display: flex; justify-content: space-between; align-items: center;">
+            <input type="text" name="id" hidden value="{{master_awb.id}}">
+            <div class="col-md-5 col-lg-5 col-5">
+                <div class="form-group">
+                    <label for="">{{form.arr_pcs.label}}</label>
+                    {{form.arr_pcs}}
+                </div>
+            </div>
+           
+          
+            <div class="col-md-5 col-lg-5 col-sm-5">
+                <div class="form-group">
+                    <label for="">{{form.arr_kg.label}}</label>
+                    {{form.arr_kg}}
+                </div>
+            </div>
+    
+            <div class="col-md-2 col-lg-2 col-sm-2">
+               
+                <button type="submit" class="btn btn-primary">save</button>
+            
+            </div>
+        </div>
+    </form>
+
+    <!-- dlv content start -->
+    <form action="{% url 'update_master_dlv' master_awb.id %}" method="POST" class="">
+        {% csrf_token %}
+        <div class="row" style="display: flex; justify-content: space-between; align-items: center;">
+            <input type="text" name="id" hidden value="{{master_awb.id}}">
+            <div class="col-md-5 col-lg-5 col-5">
+                <div class="form-group">
+                    <label for="">{{form.dlv_pcs.label}}</label>
+                    {{form.dlv_pcs}}
+                </div>
+            </div>
+    
+            <div class="col-md-5 col-lg-5 col-sm-5">
+                <div class="form-group">
+                    <label for="">{{form.dlv_kg.label}}</label>
+                    {{form.dlv_kg}}
+                </div>
+            </div>
+
+            <div class="col-md-2 col-lg-2 col-sm-3">
+                
+                <button type="submit" class="btn btn-primary">save</button>
+               
+            </div>
+        </div>
+    </form>
+
+    </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <a href="{% url 'on_edit_add_awb_view' master_awb.id %}" class="btn btn-primary btn-block">add</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row mt-3">
+                <div class="form-title">
+                    <h4>status</h4>
+                </div>
+                <div class="col-md-12 col-lg-12 col-sm-12 col-12">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for status in master_status %}
+                            <tr>
+                                <td>{{status.status}}</td>
+                                <td>{{status.terminal}}</td>
+                                <td>{{status.date}}</td>
+                                <td>{{status.time}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+           
+        </div>
+    </div>
+
+
+{% endblock %}

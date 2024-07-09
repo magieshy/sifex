@@ -1,0 +1,363 @@
+{% extends 'system/app/index.html' %}
+{% load widget_tweaks %}
+{% block title %}accept parcel{% endblock %}
+
+{% block page %}Acceptance parcel form{% endblock page %}
+{% block slogan %}fill parcel information properly{% endblock slogan %}    
+
+{% block style %}
+    <style>
+        .hide-accept-form {
+            display: none;
+        }
+        .hide-response-form {
+            display: none;
+        }
+        .hide-add-form {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+{% include 'system/partials/_messages.html' %}
+<div class="parcel_form">
+    <div class="card" id="accept-form-wraper">
+        <div class="card-body">
+            <form action="" method="post" id="accept-form" class="accept-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 col-lg-6 col-sm-6">
+                        <div class="row">
+                            <div class="col-lg-6 col-md-5 col-sm-12 col-12">
+                           
+                                <div class="form-group">
+                                    <label for="awb" class="">AWB</label>
+                                    {% render_field form.awb class+="form-control" placeholder="AWB (Air way bill)" %}
+                                    <button type="button" class="btn btn-primary mt-3" id="awb-btn">request key</button>
+                                </div>
+                                
+                                </div>
+                                <div class="col-lg-6 col-md-5 col-sm-12 col-12">
+                                    <div class="form-group">
+                                        <label for="order_number" class="">order number</label>
+                                        {% render_field form.order_number class+="form-control" placeholder="order number" %}
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-md-6 col-sm-12 col-12">
+                        <div class="row">
+                            <div class="col-lg-6 col-md-5 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="sender_name" class="">sender name</label>
+                                    {% render_field form.sender_name class+="form-control" placeholder="sender name" %}
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="sender_address" class="control-label">sender address</label>
+                                    {% render_field form.sender_address class+="form-control" placeholder="sender address" %}
+                                </div>
+                            </div>
+    
+                            <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="sender_tel" class="control-label">sender tel</label>
+                                    {% render_field form.sender_tel class+="form-control" placeholder="sender tel" %}
+                                </div>
+                            </div>
+    
+                            <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="sender_city" class="control-label">sender city</label>
+                                    {% render_field form.sender_city class+="form-control" placeholder="sender city" %}
+                                </div>
+                            </div>
+    
+                            <div class="col-md-12 col-lg-12 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="sender_country" class="control-label">sender country</label>
+                                    {% render_field form.sender_country class+="form-control" placeholder="sender country" %}
+                                </div>
+                            </div>
+    
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6 col-sm-12 col-12">
+                        <div class="row">
+                            <div class="col-lg-5 col-md-5 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="receiver_name" class="">receiver name</label>
+                                    {% render_field form.receiver_name class+="form-control" placeholder="receiver name" %}
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="receiver_address" class="control-label">receiver address</label>
+                                    {% render_field form.receiver_address class+="form-control" placeholder="receiver address" %}
+                                </div>
+                            </div>
+    
+                            <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="receiver_tel" class="control-label">receiver tel</label>
+                                    {% render_field form.receiver_tel class+="form-control" placeholder="receiver tel" %}
+                                </div>
+                            </div>
+    
+                            <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="receiver_city" class="control-label">receiver city</label>
+                                    {% render_field form.receiver_city class+="form-control" placeholder="receiver city" %}
+                                </div>
+                            </div>
+    
+                            <div class="col-md-12 col-lg-12 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="receiver_country" class="control-label">receiver country</label>
+                                    {% render_field form.receiver_country class+="form-control" placeholder="receiver country" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="otherfields mb-3">
+                    <div class="row">
+                        <div class="col-md-4 col-lg-4 col-sm-12 col-12">
+                            <label for="desc">Desc</label>
+                            {% render_field form.desc class+="form-control" %}
+                        </div>
+                        <div class="col-md-4 col-lg-4 col-sm-12 col-12">
+                            <label for="freight">freight</label>
+                            {% render_field form.freight class+="form-control" %}
+                        </div>
+                        <div class="col-md-4 col-lg-4 col-sm-12 col-12">
+                            <label for="insurance">insurance</label>
+                            {% render_field form.insurance class+="form-control" %}
+                        </div>
+                       
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="awb_pcs">AWB pcs</label>
+                            {% render_field form.awb_pcs class+="form-control" %}
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="awb_kg">AWB kg</label>
+                            {% render_field form.awb_kg class+="form-control" %}
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="chargable_weight">C.W</label>
+                            {% render_field form.chargable_weight class+="form-control" %}
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="terms">terms</label>
+                            {% render_field form.terms class+="form-control" %}
+                        </div>
+                       
+                       
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="height">height</label>
+                            {% render_field form.height class+="form-control" %}
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="width">width</label>
+                            {% render_field form.width class+="form-control" %}
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="length">length</label>
+                            {% render_field form.length class+="form-control" %}
+                        </div>
+
+                        <div class="col-md-3 col-lg-3 col-sm-12 col-12">
+                            <label for="volume">Volume</label>
+                            <input type="text" class="form-control" disabled id="id_volume">
+                        </div>
+                        
+
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="date_received">Date received</label>
+                            {% render_field form.date_received class+="form-control" %}
+                        </div>
+
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="expected_arrival_date">expected arrival date</label>
+                            {% render_field form.expected_arrival_date class+="form-control" %}
+                        </div>
+                       
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="currency">currency</label>
+                            {% render_field form.currency class+="form-control" %}
+                        </div>
+                        <!--  -->
+                        <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                            <label for="custom_value">custom value</label>
+                            {% render_field form.custom_value class+="form-control" %}
+                        </div>
+                        <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                            <label for="payment_mode">payment mode</label>
+                            {% render_field form.payment_mode class+="form-control" %}
+                        </div>
+
+                        <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                            <label for="awb_type">awb type</label>
+                            {% render_field form.awb_type class+="form-control" %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-8 col-md-8 col-sm-6 col-6">
+                        <div class="row mt-9">
+                            <div class="col-md-3 col-lg-3 col-sm-12 col-12">
+                                <button type="submit" id="save-accept-btn" class="btn btn-primary"> save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-sm-6 col-6">
+                        <div class="row">
+                            <div class="col-md-4 col-lg-4 col-sm-12 col-12">
+                                <button type="reset" class="btn btn-danger">cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- response form section -->
+    <div class="card hide-response-form" id="response-form-wraper">
+
+    </div>
+
+    <div class="card hide-parcel-display" id="parcel_display"></div>
+
+
+    <div class="card hide-add-form" id="add-form-wraper">
+        <div class="card-body">
+            <form action="" method="post" id="accept-form" class="accept-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-lg-6 col-md-5 col-sm-12 col-12">
+                        <div class="form-group">
+                            <label for="awb" class="">AWB</label>
+                            <input type="text" class="form-control" id="res_id_awb" value="">
+                            <button type="button" class="btn btn-primary mt-3" id="request-key">request key</button>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-5 col-sm-12 col-12">
+                        <div class="form-group">
+                            <label for="order_number" class="">order number</label>
+                            <input type="text" class="form-control" id="res_id_order_number" value="">
+                        </div>
+                    </div>
+                </div>
+                <div class="otherfields mb-3">
+                    <div class="row awb-form">
+                        <div class="col-md-4 col-lg-4 col-sm-12 col-12">
+                            <label for="desc">Desc</label>
+                            <input type="text" class="form-control" id="res_id_desc" value="">
+                        </div>
+                        <div class="col-md-4 col-lg-4 col-sm-12 col-12">
+                            <label for="freight">freight</label>
+                            <input type="text" class="form-control" id="res_id_freight" value="">
+                        </div>
+                        <div class="col-md-4 col-lg-4 col-sm-12 col-12">
+                            <label for="insurance">insurance</label>
+                            <input type="text" class="form-control" id="res_id_insurance" value="">
+                        </div>
+                    
+                        <div class="col-md-2 col-lg-2 col-sm-2 col-2">
+                            <label for="awb_pcs">AWB pcs</label>
+                            <input type="text" class="form-control" id="res_id_awb_pcs" value="">
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-2 col-2">
+                            <label for="awb_kg">AWB kg</label>
+                            <input type="text" class="form-control" id="res_id_awb_kg" value="">
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-2 col-2">
+                            <label for="chargable_weight">C.W</label>
+                            <input type="text" class="form-control" id="res_id_chargable_weight" value="">
+                        </div>
+
+
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="terms">terms</label>
+                            <input type="text" class="form-control" id="res_id_terms" value="">
+                        </div>
+                        
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="height">height</label>
+                            <input type="text" class="form-control input" id="res_id_height" value="">
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="width">width</label>
+                            <input type="text" class="form-control input" id="res_id_width" value="">
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="length">length</label>
+                            <input type="text" class="form-control input" id="res_id_length" value="">
+                        </div>
+                        <div class="col-md-3 col-lg-3 col-sm-12 col-12">
+                            <label for="volume">Volume</label>
+                            <input type="text" class="form-control" id="res_id_volume" disabled value="">
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="dlv_kg">currency</label>
+                            <input type="text" class="form-control" id="res_id_currency" value="">
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="dlv_kg">date received</label>
+                            <input type="date" class="form-control" id="res_id_date_received" value="">
+                        </div>
+                        <div class="col-md-2 col-lg-2 col-sm-12 col-12">
+                            <label for="dlv_kg">expected arrival date</label>
+                            <input type="date" class="form-control" id="res_id_expected_arrival_date" value="">
+                        </div>
+                        <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                            <label for="awb_type">awb type</label>
+                            {% render_field form.awb_type class+="form-control" %}
+                        </div>
+                        <!--  -->
+                        <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                            <label for="custom_value">custom value</label>
+                            <input type="text" class="form-control" id="res_id_custom_value" value="">
+                        </div>
+                        <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                            <label for="payment_mode">payment mode</label>
+                            <input type="text" class="form-control" id="res_id_payment_mode" value="">
+                        </div>
+                    </div>
+                </div>
+                <div class="row m-9">
+                    <div class="col-lg-8 col-md-8 col-sm-6 col-6">
+                        <div class="row mt-9">
+                            <div class="col-md-6 col-lg-6 col-sm-12">
+                                <button type="button" id="save-parcel-btn" class="btn btn-primary">save</button>
+                            </div>
+                            <div class="col-md-3 col-lg-3 col-sm-12">
+                                <button type="button" id="edit-response-btn" class="btn btn-primary disabled"> edit</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-4 col-sm-6 col-6">
+                        <div class="row">
+                            <div class="col-md-4 col-lg-4 col-sm-12 col-12">
+                                <button type="reset" class="btn btn-danger">cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+ 
+{% endblock %}
+{% block script %}
+<script>
+    
+    
+</script>
+{% endblock %}

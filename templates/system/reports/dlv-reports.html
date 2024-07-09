@@ -1,0 +1,108 @@
+{% extends 'system/app/index.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% block title %}Customers list{% endblock %}
+
+{% block page %}Customers list{% endblock page %}
+{% block slogan %}list of Customers{% endblock slogan %} 
+
+{% block style %}
+    <style>
+        .hide-accept-form {
+            display: none;
+        }
+        .hide-response-form {
+            display: none;
+        }
+        .hide-add-form {
+            display: none;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div class="page-title">
+
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+    <div class="table-top">
+    <div class="search-set">
+        {% include 'system/partials/_messages.html' %}
+    </div>
+    <div class="wordset">'
+    <ul>
+    <li>
+    <a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf"><img src="{% static 'system/assets/img/icons/pdf.svg' %}" alt="img"></a>
+    </li>
+    <li>
+    <a data-bs-toggle="tooltip" data-bs-placement="top" title="excel"><img src="{% static 'system/assets/img/icons/excel.svg' %}" alt="img"></a>
+    </li>
+    <li>
+    <a data-bs-toggle="tooltip" data-bs-placement="top" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>
+    </li>
+    </ul>
+    </div>
+    </div>
+    
+    <div class="card mb-0" id="filter_inputs">
+    <div class="card-body pb-0">
+    </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table  datanew">
+        <thead>
+        <tr>
+        <th>
+        <label class="checkboxs">
+        <input type="checkbox" id="select-all">
+        <span class="checkmarks"></span>
+        </label>
+        </th>
+        <th>RECEIVER NAME</th>
+        <th>AWB</th>
+        <th>Order number </th>
+        <th>AWB PCS</th>
+        <th>AWB KG</th>
+        <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for pc in pcs %}
+        <tr>
+        <td>
+        <label class="checkboxs">
+        <input type="checkbox" name="awb_id[]" value="{{pc.id}}" id="checkbox" class="loaded_status">
+        <span class="checkmarks"></span>
+        </label>
+        </td>
+        <td class="productimgname">
+            <a href="{% url 'parcel_view' pc.id %}">{{pc.receiver_name}}</a>
+        </td>
+        <td>{{pc.awb}}</td>
+        <td>{{pc.order_number}}</td>
+        <td>{{pc.awb_pcs}}</td>
+        <td>{{pc.awb_kg}}</td>
+        <td>
+        <a class="me-3" href="{% url 'parcel_view' pc.id %}">
+        <img src="{% static 'system/assets/img/icons/edit.svg' %}" alt="img">
+        </a>
+        <a href="{% url 'export-master-awb-pdf-label' pc.id %}" data-bs-toggle="tooltip" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>
+        <a class="confirm" href="{% url 'delete-awb' pc.id %}">
+        <img src="{% static 'system/assets/img/icons/delete.svg' %}" alt="img">
+        </a>
+    
+        </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block script %}
+{% endblock %}
