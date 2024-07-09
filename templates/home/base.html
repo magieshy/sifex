@@ -29,6 +29,9 @@
     <link rel="stylesheet" href="{% static 'system/assets/css/style.css' %}">
 
     <style>
+        /* a {
+            color: #ffff !important;
+        } */
         main {
             overflow-x: hidden;
         }
@@ -100,8 +103,9 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            background-color: white;
+            background-color: red !important;
             transition: all 0.3s ease;
+            padding: 10px 0;
         }
 
         .header-bottom.header-sticky {
@@ -122,14 +126,14 @@
 
         .main-menu ul li a {
             text-decoration: none;
-            color: #333;
+            color: #fff !important;
             font-weight: 500;
             padding: 10px 15px;
             transition: all 0.3s ease;
         }
 
         .main-menu ul li a:hover {
-            color: #007bff;
+            color: #ffa500;
         }
 
         .main-menu ul li a::before {
@@ -139,7 +143,7 @@
             height: 2px;
             bottom: -2px;
             left: 50%;
-            background-color: #007bff;
+            background-color: #ffa500;
             transition: all 0.3s ease;
         }
 
@@ -155,6 +159,24 @@
         .preloader.hide {
             opacity: 0;
             visibility: hidden;
+        }
+
+        .logo {
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        .mobile_menu {
+            background-color: #ff0000 !important;
+        }
+
+        .slicknav_menu .slicknav_menutxt {
+            color: #ff0000 !important;
+        }
+
+        .slicknav_nav a {
+            color: #fff !important;
         }
     </style>
     {% block style %}{% endblock %}
@@ -201,26 +223,7 @@
 <!-- Preloader End -->
 <header>
     <div class="header-area">
-        <div class="main-header ">
-            <div class="header-top d-none d-lg-block">
-                <div class="container">
-                    <div class="col-xl-12">
-                        <div class="row d-flex justify-content-between align-items-center">
-                            <div class="header-info-left">
-                                <ul>
-                                    <li>Phone: +255 688 930 963</li>
-                                    <li>Email: info@sifex.co.tz</li>
-                                </ul>
-                            </div>
-                            <div class="header-info-right">
-                                <ul class="header-social">
-                                    <li><a href="https://instagram.com/sifex_aircargo" target="_blank"><i class="fab fa-instagram"></i></a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="main-header">
             <div class="header-bottom">
                 <div class="container">
                     <div class="row align-items-center">
@@ -243,10 +246,10 @@
                                         </ul>
                                     </nav>
                                 </div>
+                                <div class="mobile_menu d-block d-lg-none">
+                                    
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="mobile_menu d-block d-lg-none"></div>
                         </div>
                     </div>
                 </div>
