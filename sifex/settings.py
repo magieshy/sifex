@@ -15,19 +15,24 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=r(#^m4zkl$a(vvh9-d%@bwxdc_ze$^gussh951mvq*r^!y122'
+# SECRET_KEY = 'django-insecure-=r(#^m4zkl$a(vvh9-d%@bwxdc_ze$^gussh951mvq*r^!y122'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['sifex.co.tz', 'sifex.up.railway.app','127.0.0.1', 'localhost']
+# ALLOWED_HOSTS = ['sifex.co.tz', 'sifex.up.railway.app','127.0.0.1', 'localhost']
 CSRF_TRUSTED_ORIGINS = ["https://sifex.co.tz", "https://sifex.up.railway.app", "http://127.0.0.1"]
 
+DEBUG = env.bool('DEBUG', default=False)
+
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 # Application definition
 
@@ -85,27 +90,34 @@ WSGI_APPLICATION = 'sifex.wsgi.application'
 
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-
-
-
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'railway',
-#         'USER': 'postgres',
-#         'PASSWORD': 'w1H0aiQY2Z5wvOYQAuOp',
-#         'HOST': 'containers-us-west-45.railway.app',
-#         'PORT': '6599',
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
 
+
+
+
+# # DATABASES = {
+# #     'default': {
+# #         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+# #         'NAME': 'railway',
+# #         'USER': 'postgres',
+# #         'PASSWORD': 'w1H0aiQY2Z5wvOYQAuOp',
+# #         'HOST': 'containers-us-west-45.railway.app',
+# #         'PORT': '6599',
+# #     }
+# # }
+
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=env('DATABASE_URL'),
+        conn_max_age=600
+    )
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

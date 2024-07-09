@@ -28,6 +28,7 @@ pycparser==2.21
 pydyf==0.7.0
 pyHanko==0.20.0
 pyhanko-certvalidator==0.23.0
+dj-database-url==2.2.0
 pypdf==3.16.0
 pyphen==0.14.0
 pypng==0.20220715.0
