@@ -19,7 +19,8 @@
 
 <style>
     body {
-        background-color: #870a0a;
+        background-image: url('{% static "images/pattern.jpg" %}');
+        background-repeat: repeat; /* Or use background-size: cover; if you want the image to cover the entire background */
     }
 </style>
 </head>
@@ -38,7 +39,7 @@
 <h4 class="text-white">Please login to your account</h4>
 {% if messages %}
 {% for message in messages %}
-<h4 id="messages text-white">{{message}}</h4>
+<h4 id="messages" class="text-white">{{message}}</h4>
 {% endfor %}	
 {% endif %}
 </div>
