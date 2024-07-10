@@ -19,9 +19,10 @@
 
 <style>
     body {
-        background-image: url('{% static "images/pattern.jpg" %}');
+        background-image: url('{% static "images/pattern2.jpg" %}');
         background-repeat: no-repeat; /* Or use background-size: cover; if you want the image to cover the entire background */
-        background-size: cover; /* Or use background-size: cover; if you want the image to cover the entire background */
+        background-size: cover; 
+        background-position: left;
     }
 </style>
 </head>
@@ -32,9 +33,9 @@
 <div class="login-wrapper">
 <div class="login-content">
 <div class="login-userset">
-<!-- <div class="login-logo">
+<div class="login-logo" style="background-color: #fff !important; border-radius: 10px;">
 <img src="{% static '/home/assets/img/logo/logo.png' %}" alt="img">
-</div> -->
+</div>
 <div class="login-userheading">
 <h3 class="text-white">Sign In</h3>
 <h4 class="text-white">Please login to your account</h4>
