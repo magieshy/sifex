@@ -32,10 +32,11 @@ pyHanko==0.20.0
 pyhanko-certvalidator==0.23.0
 pypdf==3.16.0
 pyphen==0.14.0
-pypiwin32==223
+pypiwin32==223  # Remove this line
 pypng==0.20220715.0
 python-barcode==0.15.1
 python-bidi==0.4.2
+pywin32==306  # Remove this line
 PyYAML==6.0.1
 qrcode==7.4.2
 reportlab==4.0.6
