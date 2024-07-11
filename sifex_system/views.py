@@ -1189,15 +1189,6 @@ def register_staff(request):
 def print_label(request, pk):
     awb = get_object_or_404(Masterawb, pk=pk)
 
-    # Define the path to save the PDF
-    pdf_filename = f"label_{awb.awb}.pdf"
-    pdf_dir = os.path.join(settings.MEDIA_ROOT, 'labels')
-    pdf_path = os.path.join(pdf_dir, pdf_filename)
-
-    # Ensure the directory exists
-    if not os.path.exists(pdf_dir):
-        os.makedirs(pdf_dir)
-
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
 
@@ -1255,7 +1246,7 @@ def print_label(request, pk):
     # Get the value of the BytesIO buffer and write it to the response.
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{pdf_filename}"'
+    response['Content-Disposition'] = f'attachment; filename="label_{awb.awb}.pdf"'
 
     return response
 
