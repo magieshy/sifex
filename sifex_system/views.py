@@ -1190,6 +1190,15 @@ def register_staff(request):
 def print_label(request, pk):
     awb = get_object_or_404(Masterawb, pk=pk)
 
+    # Define the path to save the PDF
+    pdf_filename = f"label_{awb.awb}.pdf"
+    pdf_dir = os.path.join(settings.MEDIA_ROOT, 'labels')
+    pdf_path = os.path.join(pdf_dir, pdf_filename)
+
+    # Ensure the directory exists
+    if not os.path.exists(pdf_dir):
+        os.makedirs(pdf_dir)
+
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
 
@@ -1198,7 +1207,13 @@ def print_label(request, pk):
 
     # Draw the content of the label
     p.setFont("Helvetica", 10)
-
+    
+    # Set line width for borders
+    p.setLineWidth(1)
+    
+    # Draw border around the label
+    p.rect(10, 10, 4 * inch - 20, 6 * inch - 20)  # Draw border with margins
+    
     # Add the barcode
     barcode_value = awb.awb
     barcode = Code128(barcode_value, writer=ImageWriter())
@@ -1207,30 +1222,32 @@ def print_label(request, pk):
     barcode_image = PILImage.open(barcode_buffer)
     barcode_image.save("barcode.png")
 
-    p.drawImage("barcode.png", 10, 400, width=180, height=50)
-    p.drawString(10, 380, barcode_value)
+    p.drawImage("barcode.png", 20, 480, width=200, height=50)
+    p.drawString(50, 470, barcode_value)
 
+    # Add horizontal lines for separation
+    y_positions = [460, 440, 420, 400, 380, 360, 340, 320, 300, 280, 260, 240, 220, 200, 180, 160]
+    for y in y_positions:
+        p.line(20, y, 4 * inch - 20, y)
+    
     # Add sender and receiver information
-    p.drawString(10, 350, "Sender:")
-    p.drawString(100, 350, awb.sender_name)
-    p.drawString(10, 335, "Phone:")
-    p.drawString(100, 335, awb.sender_tel)
+    info = [
+        ("Sender:", awb.sender_name),
+        ("Phone:", awb.sender_tel),
+        ("Receiver:", awb.receiver_name),
+        ("Receiver Phone:", awb.receiver_tel),
+        ("Receiver Address:", awb.receiver_address),
+        ("Payment type:", awb.payment_mode),
+        ("Number of pieces:", str(awb.awb_pcs)),
+        ("Chargeable weight:", f"{awb.awb_kg} kg"),
+        ("Desc:", awb.desc)
+    ]
 
-    p.drawString(10, 310, "Receiver:")
-    p.drawString(100, 310, awb.receiver_name)
-    p.drawString(10, 295, "Receiver Phone:")
-    p.drawString(100, 295, awb.receiver_tel)
-    p.drawString(10, 280, "Receiver Address:")
-    p.drawString(100, 280, awb.receiver_address)
-
-    p.drawString(10, 255, "Payment type:")
-    p.drawString(100, 255, awb.payment_mode)
-    p.drawString(10, 240, "Number of pieces:")
-    p.drawString(100, 240, awb.awb_pcs)
-    p.drawString(10, 225, "Chargeable weight:")
-    p.drawString(100, 225, f"{awb.awb_kg} kg")
-    p.drawString(10, 210, "Desc:")
-    p.drawString(100, 210, awb.desc)
+    y = 325
+    for label, value in info:
+        p.drawString(20, y, label)
+        p.drawString(130, y, value)
+        y -= 20
 
     # Close the PDF object cleanly.
     p.showPage()
@@ -1239,6 +1256,8 @@ def print_label(request, pk):
     # Get the value of the BytesIO buffer and write it to the response.
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="label_{awb.awb}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="{pdf_filename}"'
 
     return response
+
+
