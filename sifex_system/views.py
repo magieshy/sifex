@@ -29,7 +29,6 @@ import io
 import tempfile
 import os
 import base64
-from xhtml2pdf import pisa
 from PIL import Image as PILImage
 from django.template.loader import render_to_string
 
