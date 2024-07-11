@@ -5,6 +5,10 @@ from accounts.views import *
 
 urlpatterns = [
     path('', console, name="console"),
+
+    # printing
+    path('print_label/<int:pk>/', print_label, name='print_label'),
+
     path('accept_console/', accept_console, name="accept_console"),
     path('accept_loaded_console/', accept_loaded_console, name="accept_loaded_console"),
     path('accept_manifested_console/', accept_manifested_console, name="accept_manifested_console"),

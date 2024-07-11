@@ -142,7 +142,7 @@
     <a class="me-3" href="{% url 'parcel_view' pc.id %}">
     <img src="{% static 'system/assets/img/icons/edit.svg' %}" alt="img">
     </a>
-    <a href="{% url 'export-master-awb-pdf-label' pc.id %}" data-bs-toggle="tooltip" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>
+    <a href="{% url 'print_label' pc.id %}" target="_blank" data-bs-toggle="tooltip" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>
     <a class="confirm-text" href="{% url 'delete-awb' pc.id %}">
     <img src="{% static 'system/assets/img/icons/delete.svg' %}" alt="img">
     </a>
