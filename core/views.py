@@ -3,6 +3,11 @@ from django.http import JsonResponse
 from core.models import *
 from sifex_system.models import *
 
+
+
+def under_construction(request):
+    return render(request, 'home/under_construction.html')
+
 def homepage(request):
     services = Service.objects.all()
     teams = Team.objects.all()[:3]

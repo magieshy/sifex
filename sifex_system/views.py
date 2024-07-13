@@ -286,6 +286,7 @@ def add_parcel(request):
             chargable_weight=chargable_weight,
             terms=terms,
             volume=volume,
+            user=request.user,
             height=height,
             width=width,
             length=length,
@@ -437,7 +438,7 @@ def add_master_status(request):
             awb.accepted = False 
             awb.loaded = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, status=status, date=date, time=time, note=note, terminal=terminal)
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
@@ -448,7 +449,7 @@ def add_sub_status(request):
 
         for id in awb_list:
             awb = Masterawb.objects.get(pk=id)
-            awb_status = MasterStatus.objects.create(master=awb, status='accepted')
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status='accepted')
         return redirect('accept_console')
 
 @login_required
@@ -463,9 +464,9 @@ def manifested_master_status(request):
         for id in awb_list:
             awb = Masterawb.objects.get(pk=id) 
             awb.loaded = False 
-            awb.manifested = True 
+            awb.manifested = True
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, status=status, date=date, time=time, note=note, terminal=terminal)
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
@@ -483,7 +484,7 @@ def departed_master_status(request):
             awb.manifested = False 
             awb.departed = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, status=status, date=date, time=time, note=note, terminal=terminal)
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
@@ -501,7 +502,7 @@ def arrived_master_status(request):
             awb.departed = False
             awb.arrived = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, status=status, date=date, time=time, note=note, terminal=terminal)
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
@@ -519,7 +520,7 @@ def underclearance_master_status(request):
             awb.arrived = False
             awb.under_clearance = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, status=status, date=date, time=time, note=note, terminal=terminal)
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
@@ -537,7 +538,7 @@ def released_master_status(request):
             awb.under_clearance = False
             awb.released = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, status=status, date=date, time=time, note=note, terminal=terminal)
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
@@ -556,7 +557,7 @@ def pod_master_status(request):
             awb.delivered = False
             awb.POD = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, status=status, delivered_to=delivered_to, date=date, time=time, note=note, terminal=terminal)
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, delivered_to=delivered_to, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
@@ -574,7 +575,7 @@ def delivered_master_status(request):
             awb.under_clearance = False
             awb.delivered = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, status=status, date=date, time=time, note=note, terminal=terminal)
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
@@ -1047,7 +1048,7 @@ def add_customer(request):
         if not phone:
             messages.error(request, 'Phone number field is required')
             return render(request, 'system/customer/create.html', context)
-        customer = Customer.objects.create(name=name, phone=phone, address=address, city=city, country=country)
+        customer = Customer.objects.create(name=name, user=request.user, phone=phone, address=address, city=city, country=country)
         messages.success(request, f'Customer {customer.name} added successfully')
         return redirect('customers-list')
     return render(request, 'system/customer/create.html', context)

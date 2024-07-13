@@ -1,9 +1,8 @@
 from django.db import models
-from django.utils.translation import gettext as _
-from django.db.models.signals import post_save, pre_save
 from django.conf import settings
-from django.dispatch import receiver
+from django.utils.translation import gettext as _
 
+# Constants for choices
 COURIER_STATUS_CHOICES = (
     ("ACCEPTED", "accepted"),
     ("LOADED", "loaded"),
@@ -14,7 +13,7 @@ COURIER_STATUS_CHOICES = (
     ("ON TRANSIT", "on transit"),
     ("ARRIVED", "arrived"),
     ("UNDER CLEARANCE", "under clearance"),
-    ("DELIVERED", "derivered"),
+    ("DELIVERED", "delivered"),
 )
 
 TYPE_CHOICES = (
@@ -39,7 +38,7 @@ STATION_CHOICES = (
 class Masterawb(models.Model):
     PAYMENT_MODE = (
         ('PP', 'pp'),
-        ('cc', 'cc'),
+        ('CC', 'cc'),
     )
     awb = models.CharField(max_length=255, blank=True)
     order_number = models.CharField(max_length=255, null=True, blank=True)
@@ -57,12 +56,12 @@ class Masterawb(models.Model):
     freight = models.CharField(max_length=255, blank=True)
     insurance = models.CharField(max_length=255, blank=True)
     awb_pcs = models.CharField(max_length=255, blank=True)
-    awb_kg = models.FloatField(max_length=255, blank=True)
+    awb_kg = models.FloatField(blank=True)
     arr_pcs = models.CharField(max_length=255, null=True, blank=True)
     number_of_parcel = models.CharField(max_length=255, null=True, blank=True)
-    parcel_kg = models.FloatField(max_length=255, null=True, blank=True)
+    parcel_kg = models.FloatField(null=True, blank=True)
     number = models.CharField(max_length=255, null=True, blank=True)
-    arr_kg = models.FloatField(max_length=255, null=True, blank=True)
+    arr_kg = models.FloatField(null=True, blank=True)
     chargable_weight = models.CharField(max_length=255, null=True, blank=True)
     terms = models.CharField(max_length=255, null=True, blank=True)
     currency = models.CharField(max_length=255, blank=True)
@@ -72,92 +71,90 @@ class Masterawb(models.Model):
     payment_mode = models.CharField(max_length=255, choices=PAYMENT_MODE, blank=True)
     awb_type = models.CharField(max_length=255, choices=TYPE_CHOICES, null=True)
     dlv_pcs = models.CharField(max_length=255, null=True, blank=True)
-    dlv_kg = models.FloatField(max_length=255, null=True, blank=True)
+    dlv_kg = models.FloatField(null=True, blank=True)
     volume = models.CharField(max_length=255, null=True, blank=True)
     height = models.CharField(max_length=255, null=True, blank=True)
     width = models.CharField(max_length=255, null=True, blank=True)
     length = models.CharField(max_length=255, null=True, blank=True)
-    accepted = models.BooleanField(max_length=255, default=True)
-    loaded = models.BooleanField(max_length=255, default=False)
-    manifested = models.BooleanField(max_length=255, default=False)
-    departed = models.BooleanField(max_length=255, default=False)
-    arrived = models.BooleanField(max_length=255, default=False)
-    under_clearance = models.BooleanField(max_length=255, default=False)
-    delivered = models.BooleanField(max_length=255, default=False)
-    released = models.BooleanField(max_length=255, default=False)
-    POD = models.BooleanField(max_length=255, default=False)
+    accepted = models.BooleanField(default=True)
+    loaded = models.BooleanField(default=False)
+    manifested = models.BooleanField(default=False)
+    departed = models.BooleanField(default=False)
+    arrived = models.BooleanField(default=False)
+    under_clearance = models.BooleanField(default=False)
+    delivered = models.BooleanField(default=False)
+    released = models.BooleanField(default=False)
+    POD = models.BooleanField(default=False)
     
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuers')
 
     def __str__(self):
         return f'{self.receiver_name} {self.awb}'
 
 
-
-
 class Slaveawb(models.Model):
     PAYMENT_MODE = (
         ('PP', 'pp'),
-        ('cc', 'cc'),
+        ('CC', 'cc'),
     )
     master = models.ForeignKey(Masterawb, on_delete=models.CASCADE, null=True, blank=True, related_name="slave_master")
     master_awb = models.CharField(max_length=255, null=True)
     awb = models.CharField(max_length=255, null=True)
     order_number = models.CharField(max_length=255, null=True)
-    desc = models.CharField(max_length=255, null=True,)
-    freight = models.CharField(max_length=255, null=True,)
-    insurance = models.CharField(max_length=255, null=True,)
-    awb_pcs = models.CharField(max_length=255, null=True,)
-    awb_kg = models.FloatField(max_length=255, null=True,)
+    desc = models.CharField(max_length=255, null=True)
+    freight = models.CharField(max_length=255, null=True)
+    insurance = models.CharField(max_length=255, null=True)
+    awb_pcs = models.CharField(max_length=255, null=True)
+    awb_kg = models.FloatField(null=True)
     arr_pcs = models.CharField(max_length=255, null=True, blank=True)
-    arr_kg = models.FloatField(max_length=255, null=True, blank=True)
+    arr_kg = models.FloatField(null=True, blank=True)
     chargable_weight = models.CharField(max_length=255, null=True, blank=True)
     terms = models.CharField(max_length=255, null=True, blank=True)
-    currency = models.CharField(max_length=255, null=True,)
+    currency = models.CharField(max_length=255, null=True)
     expected_arrival_date = models.DateField(null=True, blank=True)
     number = models.CharField(max_length=255, null=True, blank=True)
     date_received = models.DateTimeField(null=True, blank=True)
-    custom_value = models.CharField(max_length=255, null=True,)
+    custom_value = models.CharField(max_length=255, null=True)
     payment_mode = models.CharField(max_length=255, null=True, choices=PAYMENT_MODE)
     awb_type = models.CharField(max_length=255, choices=TYPE_CHOICES, null=True)
     dlv_pcs = models.CharField(max_length=255, null=True, blank=True)
-    dlv_kg = models.FloatField(max_length=255, null=True, blank=True)
+    dlv_kg = models.FloatField(null=True, blank=True)
     volume = models.CharField(max_length=255, null=True, blank=True)
     height = models.CharField(max_length=255, null=True, blank=True)
     width = models.CharField(max_length=255, null=True, blank=True)
     length = models.CharField(max_length=255, null=True, blank=True)
-    accepted = models.BooleanField(max_length=255, default=True)
-    loaded = models.BooleanField(max_length=255, default=False)
-    manifested = models.BooleanField(max_length=255, default=False)
-    departed = models.BooleanField(max_length=255, default=False)
-    arrived = models.BooleanField(max_length=255, default=False)
-    under_clearance = models.BooleanField(max_length=255, default=False)
-    delivered = models.BooleanField(max_length=255, default=False)
-    released = models.BooleanField(max_length=255, default=False)
-    POD = models.BooleanField(max_length=255, default=False)
+    accepted = models.BooleanField(default=True)
+    loaded = models.BooleanField(default=False)
+    manifested = models.BooleanField(default=False)
+    departed = models.BooleanField(default=False)
+    arrived = models.BooleanField(default=False)
+    under_clearance = models.BooleanField(default=False)
+    delivered = models.BooleanField(default=False)
+    released = models.BooleanField(default=False)
+    POD = models.BooleanField(default=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='slave_issuers')
 
     def __str__(self):
         return self.desc
 
 
-
-
 class Invoice(models.Model):
     customer = models.CharField(max_length=100)
     customer_email = models.EmailField(null=True, blank=True)
-    customer_phone = models.EmailField(null=True, blank=True)
+    customer_phone = models.CharField(max_length=100, null=True)
     billing_address = models.TextField(null=True, blank=True)
     date = models.DateField()
     due_date = models.DateField(null=True, blank=True)
-    # message = models.TextField(default= "this is a default message.")
     total_amount_tzs = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     total_amount_usd = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     status = models.BooleanField(default=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_invoices')
+
     def __str__(self):
         return str(self.customer)
     
     def get_status(self):
         return self.status
-
 
 
 class LineItem(models.Model):
@@ -175,53 +172,41 @@ class LineItem(models.Model):
         return str(self.customer)
 
 
-
-
-
-
-
-
-
-
-
 class SlaveStatus(models.Model):
     sub_awb = models.ForeignKey(Slaveawb, on_delete=models.CASCADE, null=True, related_name="slave_status")
     status = models.CharField(verbose_name="status", null=True, max_length=50)
     date = models.DateField(_("Date"), auto_now_add=True, null=True, blank=True)
-    time = models.TimeField(_("Time"),auto_now=True, null=True, blank=True)
+    time = models.TimeField(_("Time"), auto_now=True, null=True, blank=True)
     note = models.TextField(null=True, blank=True)
     terminal = models.CharField(max_length=100, null=True, choices=STATION_CHOICES)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_slave_histories')
+
 
 class MasterStatus(models.Model):
     master = models.ForeignKey(Masterawb, on_delete=models.CASCADE, null=True, related_name="master_status")
     status = models.CharField(verbose_name="status", null=True, max_length=50)
     delivered_to = models.CharField(verbose_name="delivered to", null=True, blank=True, max_length=50)
     date = models.DateField(_("Date"), auto_now_add=True, null=True, blank=True)
-    time = models.TimeField(_("Time"),auto_now=True, null=True, blank=True)
+    time = models.TimeField(_("Time"), auto_now=True, null=True, blank=True)
     note = models.TextField(null=True, blank=True)
     terminal = models.CharField(max_length=100, null=True, choices=STATION_CHOICES)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_parcel_histories')
 
     def __str__(self):
         return f'{self.master.sender_name} status: {self.status}'
 
 
-
-
-
-
 class Quote(models.Model):
     SERVICE_CHOICES = (
-    ("air transport", "air transport"),
-    ("transport", "transport service"),
-    ("warehouse", "Warehouse service"),
-   
+        ("air transport", "air transport"),
+        ("transport", "transport service"),
+        ("warehouse", "Warehouse service"),
     )
     name = models.CharField(_("name"), max_length=50)
     email = models.EmailField(_("email"), max_length=254)
     phone = models.CharField(_("phone"), max_length=254)
     service = models.CharField(verbose_name="choose service", choices=SERVICE_CHOICES, max_length=50)
     massage = models.TextField(verbose_name="your quote massage", null=True)
-
 
     class Meta:
         verbose_name = _("Quote")
@@ -234,16 +219,14 @@ class Quote(models.Model):
         return reverse("quote_detail", kwargs={"pk": self.pk})
 
 
-
-
 class SystemPreference(models.Model):
     rate = models.FloatField(null=True)
     currency = models.CharField(max_length=120, null=True)
     exchange_rate = models.FloatField(null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_preferences')
 
     def __str__(self):
         return f'{self.rate}'
-
 
 
 class Customer(models.Model):
@@ -252,7 +235,10 @@ class Customer(models.Model):
     address = models.CharField(max_length=255, null=True)
     city = models.CharField(max_length=255, null=True)
     country = models.CharField(max_length=255, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_customers')
 
+    def __str__(self):
+        return self.name
 
 
 class Staff(models.Model):
@@ -265,9 +251,10 @@ class Staff(models.Model):
     designation = models.CharField(max_length=255, null=True)
     department = models.CharField(max_length=255, null=True)
     company = models.CharField(max_length=255, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_stafs')
 
     def __str__(self):
-        return f'{self.name}'
+        return self.name
 
 
 class Attendance(models.Model):
@@ -277,6 +264,5 @@ class Attendance(models.Model):
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
     present = models.BooleanField(default=False)
 
-
     def __str__(self):
-        return f'{self.staff.name}'
+        return self.staff.name
