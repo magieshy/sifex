@@ -62,6 +62,7 @@
 
 {% block content %}
 <!-- Carousel Section -->
+<br><br><br><br>
 <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-indicators">
         {% for carousel in carousels %}
@@ -72,9 +73,9 @@
         {% for carousel in carousels %}
         <div class="carousel-item {% if forloop.first %}active{% endif %}">
             <img src="{{ carousel.carousel_image.url }}" class="d-block w-100" alt="{{ carousel.title }}">
-            <div class="carousel-caption d-none d-md-block">
-                <h5>{{ carousel.title }}</h5>
-                <p>{{ carousel.description }}</p>
+            <div class="carousel-caption d-none d-md-block" style="background-color: #ff0000; padding: 10px;">
+                <!-- <h5 class="text-white">{{ carousel.title }}</h5> -->
+                <!-- <p>{{ carousel.description }}</p> -->
             </div>
         </div>
         {% endfor %}
