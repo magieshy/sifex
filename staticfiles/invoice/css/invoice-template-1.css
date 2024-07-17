@@ -134,7 +134,7 @@ table .qty {
 }
 
 table .total {
-  background: #57B223;
+  background: #ff0000;
   color: #FFFFFF;
 }
 
@@ -162,9 +162,9 @@ table tfoot tr:first-child td {
 }
 
 table tfoot tr:last-child td {
-  color: #57B223;
+  color: #ff0000;
   font-size: 1.4em;
-  border-top: 1px solid #57B223; 
+  border-top: 1px solid #ff0000; 
 
 }
 

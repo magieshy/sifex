@@ -27,6 +27,10 @@
     <div class="page-btn">
         {% if request.user.acceptance %}
         <a href="{% url 'accept_form_view' %}" class="btn btn-added"><img src="{% static 'system/assets/img/icons/plus.svg' %}" alt="img" class="me-1">new awb</a>
+        {% elif request.user.is_superuser %}
+        <a href="{% url 'accept_form_view' %}" class="btn btn-added"><img src="{% static 'system/assets/img/icons/plus.svg' %}" alt="img" class="me-1">new awb</a>
+        {% elif request.user.management  %}
+        <a href="{% url 'accept_form_view' %}" class="btn btn-added"><img src="{% static 'system/assets/img/icons/plus.svg' %}" alt="img" class="me-1">new awb</a>
         {% endif %}
     </div>
 </div>

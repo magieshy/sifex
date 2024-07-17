@@ -10,8 +10,11 @@ def under_construction(request):
 
 def homepage(request):
     services = Service.objects.all()
+    blogs = Post.objects.all()
     teams = Team.objects.all()[:3]
-    return render(request, 'home/index.html', {'services': services, 'teams': teams})
+    carousels = Carousel.objects.all()  # Fetch carousel objects
+    return render(request, 'home/index.html', {'services': services, 'teams': teams, 'carousels': carousels, 'blogs': blogs})
+
 
 def services(request):
     services = Service.objects.all()
@@ -109,3 +112,11 @@ def request_a_quote(request):
         service = request.POST.get('service')
         quote = Quote.objects.create(name=name, email=email, phone=phone, service=service)
         return redirect('home')
+
+
+
+
+def blog_details(request, pk):
+    blog = Post.objects.get(id=pk)
+    context = {'blog': blog}
+    return render(request, 'home/blog_detail.html', context)

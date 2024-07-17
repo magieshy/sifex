@@ -9,8 +9,8 @@
             <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> Export</span> <span class="menu-arrow"></span></a>
             <ul>
                 <li><a href="{% url 'accept_console' %}"><span>Acceptance</span></a></li>
-                <li><a href="{% url 'accept_loaded_console' %}"><span>Load</span></a></li>
                 <li><a href="{% url 'accept_manifested_console' %}"><span>manifest</span></a></li>
+                <li><a href="{% url 'accept_loaded_console' %}"><span>Load</span></a></li>
             </ul>
         </li>
         {% endif %}
@@ -93,7 +93,7 @@
 
         {% if request.user.is_superuser %}
         <li class="submenu">
-            <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> Admin</span> <span class="menu-arrow"></span></a>
+            <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> Cargo</span> <span class="menu-arrow"></span></a>
             <ul>
                 <li><a href="{% url 'accept_console' %}"><span>Acceptance</span></a></li>
                 <li><a href="{% url 'accept_loaded_console' %}"><span>Load</span></a></li>

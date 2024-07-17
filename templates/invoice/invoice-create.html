@@ -20,13 +20,12 @@
                             <label for="">Customer Phone</label>
                             <input class="form-control" type="text" value="{{awb.receiver_tel}}" name="customer_phone" id="id_customer_phone">
                         </div>
+                    </div>
+                    <div class="columns is-centered">
                         <div class="column is-one-third">
                             <label for="">Billing Address</label>
                             <input class="form-control" type="text" value="{{awb.receiver_city}}" name="billing_address" id="id_billing_address">
                         </div>
-                    </div>
-                    <div class="columns is-centered">
-                       
                         <div class="column is-one-third">
                             date: <input class="form-control input" type="date" required name="date">
                         </div>
@@ -42,6 +41,7 @@
                                 <tr>
                                     <th>Product/Service</th>
                                     <th>Description</th>
+                                    <th>Origin</th>
                                     <th>QTY</th>
                                     <th>WEIGHT</th>
                                     <th>RATE</th>
@@ -52,6 +52,7 @@
                                 <tr>
                                     <td><input type="text" name="service" value="{{awb.awb}}" placeholder="service" class="form-control input"> </td>
                                     <td><input type="text" name="description" value="{{awb.desc}}" placeholder="Description" class="form-control input"></td>
+                                    <td><input type="text" name="origin" value="{{awb.awb_type}}" placeholder="Origin" class="form-control input"></td>
                                     <td><input type="text" name="quantity" value="{{awb.awb_pcs}}" placeholder="QTY" class="form-control input"></td>
                                     <td><input type="text" name="chargable_weight" value="{{awb.chargable_weight}}" placeholder="Weight" class="form-control input chargable-weight"></td>
                                     <td><input type="text" name="rate" value="" placeholder="Rate" class="form-control input rate"></td>

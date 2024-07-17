@@ -67,7 +67,7 @@
         <div class="col-md-12 col-lg-12 col-sm-12 d-flex justify-content-between">
             <div class="form-group">
                 <select name="status" id="id_status" class="form-control">
-                    <option value="POD" class="form-control">P.O.D</option>
+                    <option value="delivered" class="form-control">Delivery</option>
                 </select>
                 
             </div>
@@ -176,7 +176,7 @@
                 console.log(id)
                 $.ajax({
                     type: 'POST',
-                    url: '/sifex/pod/',
+                    url: '/sifex/delivered/',
                     data: {
                         'csrfmiddlewaretoken': csrftoken,
                         id,

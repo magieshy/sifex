@@ -2,8 +2,7 @@
 {% load widget_tweaks %}
 {% block title %}accept parcel{% endblock %}
 
-{% block page %}Acceptance parcel form{% endblock page %}
-{% block slogan %}fill parcel information properly{% endblock slogan %}    
+{% block page %}Acceptance parcel form{% endblock page %}  
 
 {% block style %}
     <style>
@@ -30,20 +29,18 @@
                     <div class="col-md-6 col-lg-6 col-sm-6">
                         <div class="row">
                             <div class="col-lg-6 col-md-5 col-sm-12 col-12">
-                           
                                 <div class="form-group">
                                     <label for="awb" class="">AWB</label>
                                     {% render_field form.awb class+="form-control" placeholder="AWB (Air way bill)" %}
                                     <button type="button" class="btn btn-primary mt-3" id="awb-btn">request key</button>
                                 </div>
-                                
+                            </div>
+                            <div class="col-lg-6 col-md-5 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="order_number" class="">order number</label>
+                                    {% render_field form.order_number class+="form-control" placeholder="order number" %}
                                 </div>
-                                <div class="col-lg-6 col-md-5 col-sm-12 col-12">
-                                    <div class="form-group">
-                                        <label for="order_number" class="">order number</label>
-                                        {% render_field form.order_number class+="form-control" placeholder="order number" %}
-                                    </div>
-                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -62,28 +59,30 @@
                                     {% render_field form.sender_address class+="form-control" placeholder="sender address" %}
                                 </div>
                             </div>
-    
                             <div class="col-md-6 col-lg-6 col-sm-12 col-12">
                                 <div class="form-group">
                                     <label for="sender_tel" class="control-label">sender tel</label>
                                     {% render_field form.sender_tel class+="form-control" placeholder="sender tel" %}
                                 </div>
                             </div>
-    
                             <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="sender_company" class="control-label">sender company</label>
+                                    {% render_field form.sender_company class+="form-control" placeholder="sender company" %}
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-lg-12 col-sm-12 col-12">
                                 <div class="form-group">
                                     <label for="sender_city" class="control-label">sender city</label>
                                     {% render_field form.sender_city class+="form-control" placeholder="sender city" %}
                                 </div>
                             </div>
-    
                             <div class="col-md-12 col-lg-12 col-sm-12 col-12">
                                 <div class="form-group">
                                     <label for="sender_country" class="control-label">sender country</label>
                                     {% render_field form.sender_country class+="form-control" placeholder="sender country" %}
                                 </div>
                             </div>
-    
                         </div>
                     </div>
                     <div class="col-lg-6 col-md-6 col-sm-12 col-12">
@@ -100,21 +99,24 @@
                                     {% render_field form.receiver_address class+="form-control" placeholder="receiver address" %}
                                 </div>
                             </div>
-    
                             <div class="col-md-6 col-lg-6 col-sm-12 col-12">
                                 <div class="form-group">
                                     <label for="receiver_tel" class="control-label">receiver tel</label>
                                     {% render_field form.receiver_tel class+="form-control" placeholder="receiver tel" %}
                                 </div>
                             </div>
-    
+                            <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                                <div class="form-group">
+                                    <label for="receiver_company" class="control-label">receiver company</label>
+                                    {% render_field form.receiver_company class+="form-control" placeholder="receiver company" %}
+                                </div>
+                            </div>
                             <div class="col-md-6 col-lg-6 col-sm-12 col-12">
                                 <div class="form-group">
                                     <label for="receiver_city" class="control-label">receiver city</label>
                                     {% render_field form.receiver_city class+="form-control" placeholder="receiver city" %}
                                 </div>
                             </div>
-    
                             <div class="col-md-12 col-lg-12 col-sm-12 col-12">
                                 <div class="form-group">
                                     <label for="receiver_country" class="control-label">receiver country</label>
@@ -138,7 +140,6 @@
                             <label for="insurance">insurance</label>
                             {% render_field form.insurance class+="form-control" %}
                         </div>
-                       
                         <div class="col-md-2 col-lg-2 col-sm-12 col-12">
                             <label for="awb_pcs">AWB pcs</label>
                             {% render_field form.awb_pcs class+="form-control" %}
@@ -155,8 +156,6 @@
                             <label for="terms">terms</label>
                             {% render_field form.terms class+="form-control" %}
                         </div>
-                       
-                       
                         <div class="col-md-2 col-lg-2 col-sm-12 col-12">
                             <label for="height">height</label>
                             {% render_field form.height class+="form-control" %}
@@ -169,28 +168,22 @@
                             <label for="length">length</label>
                             {% render_field form.length class+="form-control" %}
                         </div>
-
                         <div class="col-md-3 col-lg-3 col-sm-12 col-12">
                             <label for="volume">Volume</label>
-                            <input type="text" class="form-control" disabled id="id_volume">
+                            <input type="text" class="form-control" id="id_volume" disabled>
                         </div>
-                        
-
                         <div class="col-md-2 col-lg-2 col-sm-12 col-12">
                             <label for="date_received">Date received</label>
                             {% render_field form.date_received class+="form-control" %}
                         </div>
-
                         <div class="col-md-2 col-lg-2 col-sm-12 col-12">
                             <label for="expected_arrival_date">expected arrival date</label>
                             {% render_field form.expected_arrival_date class+="form-control" %}
                         </div>
-                       
                         <div class="col-md-2 col-lg-2 col-sm-12 col-12">
                             <label for="currency">currency</label>
                             {% render_field form.currency class+="form-control" %}
                         </div>
-                        <!--  -->
                         <div class="col-md-6 col-lg-6 col-sm-12 col-12">
                             <label for="custom_value">custom value</label>
                             {% render_field form.custom_value class+="form-control" %}
@@ -199,7 +192,6 @@
                             <label for="payment_mode">payment mode</label>
                             {% render_field form.payment_mode class+="form-control" %}
                         </div>
-
                         <div class="col-md-6 col-lg-6 col-sm-12 col-12">
                             <label for="awb_type">awb type</label>
                             {% render_field form.awb_type class+="form-control" %}
@@ -231,7 +223,6 @@
     </div>
 
     <div class="card hide-parcel-display" id="parcel_display"></div>
-
 
     <div class="card hide-add-form" id="add-form-wraper">
         <div class="card-body">
@@ -266,7 +257,6 @@
                             <label for="insurance">insurance</label>
                             <input type="text" class="form-control" id="res_id_insurance" value="">
                         </div>
-                    
                         <div class="col-md-2 col-lg-2 col-sm-2 col-2">
                             <label for="awb_pcs">AWB pcs</label>
                             <input type="text" class="form-control" id="res_id_awb_pcs" value="">
@@ -279,13 +269,10 @@
                             <label for="chargable_weight">C.W</label>
                             <input type="text" class="form-control" id="res_id_chargable_weight" value="">
                         </div>
-
-
                         <div class="col-md-2 col-lg-2 col-sm-12 col-12">
                             <label for="terms">terms</label>
                             <input type="text" class="form-control" id="res_id_terms" value="">
                         </div>
-                        
                         <div class="col-md-2 col-lg-2 col-sm-12 col-12">
                             <label for="height">height</label>
                             <input type="text" class="form-control input" id="res_id_height" value="">
@@ -318,7 +305,6 @@
                             <label for="awb_type">awb type</label>
                             {% render_field form.awb_type class+="form-control" %}
                         </div>
-                        <!--  -->
                         <div class="col-md-6 col-lg-6 col-sm-12 col-12">
                             <label for="custom_value">custom value</label>
                             <input type="text" class="form-control" id="res_id_custom_value" value="">
@@ -343,7 +329,7 @@
                     <div class="col-lg-4 col-md-4 col-sm-6 col-6">
                         <div class="row">
                             <div class="col-md-4 col-lg-4 col-sm-12 col-12">
-                                <button type="reset" class="btn btn-danger">cancel</button>
+                                <a href="/sifex/accept_console/" class="btn btn-danger">cancel</a>
                             </div>
                         </div>
                     </div>
@@ -352,12 +338,19 @@
         </div>
     </div>
 </div>
-
- 
 {% endblock %}
 {% block script %}
 <script>
-    
-    
+    function calculateVolume() {
+        const width = parseFloat(document.getElementById('id_width').value) || 0;
+        const height = parseFloat(document.getElementById('id_height').value) || 0;
+        const length = parseFloat(document.getElementById('id_length').value) || 0;
+        const volume = (width * height * length) / 5000;
+        document.getElementById('id_volume').value = volume.toFixed(2);
+    }
+
+    document.getElementById('id_width').addEventListener('input', calculateVolume);
+    document.getElementById('id_height').addEventListener('input', calculateVolume);
+    document.getElementById('id_length').addEventListener('input', calculateVolume);
 </script>
 {% endblock %}

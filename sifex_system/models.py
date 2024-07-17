@@ -17,9 +17,11 @@ COURIER_STATUS_CHOICES = (
 )
 
 TYPE_CHOICES = (
-    ("normal awb", "Normal awb"),
-    ("express awb", "Express awb"),
-    ("shengzen awb", "Shengzen awb"),
+    ("CAN - Guanzhou", "CAN - Guanzhou"),
+    ("HKG - HongKong", "HKG - HongKong"),
+    ("DXB - Dubai", "DXB - Dubai"),
+    ("CAN - Express", "CAN - Express"),
+    ("MCO - Express", "MCO - Express"),
 )
 
 STATION_CHOICES = (
@@ -44,11 +46,13 @@ class Masterawb(models.Model):
     order_number = models.CharField(max_length=255, null=True, blank=True)
     sender_name = models.CharField(max_length=255, blank=True)
     sender_address = models.CharField(max_length=255, blank=True)
+    sender_company = models.CharField(max_length=255, blank=True)
     sender_tel = models.CharField(max_length=255, blank=True)
     sender_city = models.CharField(max_length=255, blank=True)
     sender_country = models.CharField(max_length=255, blank=True)
     receiver_name = models.CharField(max_length=255, blank=True)
     receiver_address = models.CharField(max_length=255, blank=True)
+    receiver_company = models.CharField(max_length=255, blank=True)
     receiver_tel = models.CharField(max_length=255, blank=True)
     receiver_city = models.CharField(max_length=255, blank=True)
     receiver_country = models.CharField(max_length=255, blank=True)
@@ -82,8 +86,10 @@ class Masterawb(models.Model):
     departed = models.BooleanField(default=False)
     arrived = models.BooleanField(default=False)
     under_clearance = models.BooleanField(default=False)
-    delivered = models.BooleanField(default=False)
     released = models.BooleanField(default=False)
+    account = models.BooleanField(default=False)
+    invoice_paid = models.BooleanField(default=False)
+    delivered = models.BooleanField(default=False)
     POD = models.BooleanField(default=False)
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuers')
@@ -143,6 +149,8 @@ class Invoice(models.Model):
     customer_email = models.EmailField(null=True, blank=True)
     customer_phone = models.CharField(max_length=100, null=True)
     billing_address = models.TextField(null=True, blank=True)
+    awb = models.ForeignKey(Masterawb, null=True, on_delete=models.CASCADE)
+    origin = models.CharField(max_length=100, null=True)
     date = models.DateField()
     due_date = models.DateField(null=True, blank=True)
     total_amount_tzs = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
@@ -159,6 +167,7 @@ class Invoice(models.Model):
 
 class LineItem(models.Model):
     customer = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    tracking_key = models.CharField(max_length=255, blank=True)
     service = models.TextField(null=True)
     description = models.TextField()
     quantity = models.IntegerField()

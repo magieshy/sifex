@@ -45,11 +45,13 @@ function hideacceptform(e){
             'sender_tel': document.getElementById('id_sender_tel').value,
             'sender_address': document.getElementById('id_sender_address').value,
             'sender_city': document.getElementById('id_sender_city').value,
+            'sender_company': document.getElementById('id_sender_company').value,
             'sender_country': document.getElementById('id_sender_country').value,
             'receiver_name': document.getElementById('id_receiver_name').value,
             'receiver_address': document.getElementById('id_receiver_address').value,
             'receiver_tel': document.getElementById('id_receiver_tel').value,
             'receiver_city': document.getElementById('id_receiver_city').value,
+            'receiver_company': document.getElementById('id_receiver_company').value,
             'receiver_country': document.getElementById('id_receiver_country').value,
             'awb_type': document.getElementById('id_awb_type').value,
             'desc': document.getElementById('id_desc').value,
@@ -170,9 +172,6 @@ function hideacceptform(e){
                 <div class="col-lg-8 col-md-8 col-sm-6 col-6">
                     <div class="row mt-9">
                         <div class="col-md-3 col-lg-3 col-sm-4">
-                            <button type="button" id="add-parcel-btn" class="btn btn-primary">add</button>
-                        </div>
-                        <div class="col-md-3 col-lg-3 col-sm-4">
                             <button type="button" id="save-response-btn" class="btn btn-primary disabled"> save</button>
                         </div>
                         <div class="col-md-3 col-lg-3 col-sm-4">
@@ -183,7 +182,7 @@ function hideacceptform(e){
                 <div class="col-lg-4 col-md-4 col-sm-6 col-6">
                     <div class="row">
                         <div class="col-md-4 col-lg-4 col-sm-4">
-                            <button type="reset" class="btn btn-danger">cancel</button>
+                            <a href="/sifex/accept_console/" class="btn btn-danger">Cancel</a>
                         </div>
                     </div>
                 </div>
@@ -192,12 +191,12 @@ function hideacceptform(e){
     </div>
             
     `
-        const addBtn = document.getElementById('add-parcel-btn')
+
         function showAddParccelForm(){
             addParcelContainer.classList.remove('hide-add-form')
         }
 
-        addBtn.addEventListener('click', showAddParccelForm);
+        // addBtn.addEventListener('click', showAddParccelForm);
         },
         error: (err)=>{
             console.log(err)

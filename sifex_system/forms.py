@@ -18,11 +18,13 @@ class MasterForm(ModelForm):
     sender_address = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     sender_tel = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     sender_city = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
+    sender_comapny = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     sender_country = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     receiver_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     receiver_address = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     receiver_tel = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     receiver_city = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
+    receiver_company = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     receiver_country = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     desc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
     freight = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text', }))
@@ -62,11 +64,13 @@ class MasterCreateForm(ModelForm):
     sender_address = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     sender_tel = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     sender_city = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
+    sender_company = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     sender_country = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     receiver_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     receiver_address = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     receiver_tel = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     receiver_city = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
+    receiver_company = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     receiver_country = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     desc = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
     freight = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'type': 'text'}))
@@ -245,3 +249,5 @@ class CustomerForm(ModelForm):
     class Meta: 
         model = Customer 
         fields = ['name', ]
+
+

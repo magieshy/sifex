@@ -39,6 +39,7 @@
             <th class="no">#</th>
             <th class="desc">AWB</th>
             <th class="unit">RATE</th>
+            <th class="unit">ORIGIN</th>
             <th class="qty">QUANTITY</th>
             <th class="qty">Weight</th>
             <th class="total">AMOUNT IN TZS</th>
@@ -51,6 +52,7 @@
             <td class="no">{{forloop.counter}}</td>
             <td class="desc">{{item.service}}</td>
             <td class="unit">${{item.rate}}</td>
+            <td class="unit">{{invoice_origin}}</td>
             <td class="qty">{{item.quantity}}</td>
             <td class="qty">{{item.chargable_weight}}</td>
             <td class="total">Tzs {{item.amount_tz}}</td>

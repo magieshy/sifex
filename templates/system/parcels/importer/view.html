@@ -292,7 +292,7 @@
 
     <div class="card">
         <div class="card-body">
-            <a href="{% url 'on_edit_add_awb_view' master_awb.id %}" class="btn btn-primary btn-block">add</a>
+            <a href="{% url 'on_edit_add_awb_view' master_awb.id %}" class="btn btn-primary btn-block">Add New Awb</a>
         </div>
     </div>
 
@@ -300,12 +300,14 @@
         <div class="card-body">
             <div class="row mt-3">
                 <div class="form-title">
-                    <h4>status</h4>
+                    <h4>History</h4>
                 </div>
                 <div class="col-md-12 col-lg-12 col-sm-12 col-12">
                     <table>
                         <thead>
                             <tr>
+                                <th></th>
+                                <th></th>
                                 <th></th>
                                 <th></th>
                                 <th></th>
@@ -316,6 +318,7 @@
                             <tr>
                                 <td>{{status.status}}</td>
                                 <td>{{status.terminal}}</td>
+                                <td>{{status.user}}</td>
                                 <td>{{status.date}}</td>
                                 <td>{{status.time}}</td>
                             </tr>

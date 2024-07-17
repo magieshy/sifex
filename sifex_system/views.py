@@ -1,9 +1,11 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.contrib.auth.views import PasswordChangeView
 from django.template.loader import get_template
 from django.views import View
 from django.http import HttpResponse
 # from django.contrib.auth.models import User
+from django.db.models import Q
 from accounts.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -15,22 +17,25 @@ from sifex_system.models import *
 from sifex_system.forms import *
 from django.db.models import Sum
 import datetime
+from django.utils.timezone import now as timezone_now
 from core.models import *
 from .models import Invoice, LineItem, Customer, Attendance, Staff
 import pdfkit
 
 
 # for printing
-from reportlab.lib.pagesizes import inch
-from reportlab.pdfgen import canvas
-from barcode import Code128
-from barcode.writer import ImageWriter
-import io
-import tempfile
 import os
-import base64
-from PIL import Image as PILImage
-from django.template.loader import render_to_string
+from django.conf import settings
+from django.contrib.staticfiles import finders
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter, inch
+from reportlab.lib.units import mm
+from reportlab.graphics.barcode import code128
+from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing
+from io import BytesIO
 
 # another approch
 
@@ -38,6 +43,10 @@ from reportlab.lib.pagesizes import inch
 from reportlab.pdfgen import canvas
 from reportlab.graphics.barcode import code128
 
+
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 @login_required
 def register_customer(request):
@@ -115,7 +124,7 @@ def accept_release_console(request):
 
 @login_required
 def accept_delivered_console(request):
-    pcs = Masterawb.objects.filter(delivered=True).order_by('-date_received')
+    pcs = Masterawb.objects.filter(invoice_paid=True).order_by('-date_received')
     context = {
         'pcs': pcs,
     }
@@ -123,7 +132,7 @@ def accept_delivered_console(request):
 
 @login_required
 def accept_pod_console(request):
-    pcs = Masterawb.objects.filter(POD=True)
+    pcs = Masterawb.objects.filter(delivered=True)
     context = {
         'pcs': pcs,
     }
@@ -151,10 +160,12 @@ def accept_parcel(request):
         sender_name = request.POST.get('sender_name')
         sender_address = request.POST.get('sender_address')
         sender_city = request.POST.get('sender_city')
+        sender_company = request.POST.get('sender_company')
         sender_tel = request.POST.get('sender_tel')
         sender_country = request.POST.get('sender_country')
         receiver_name = request.POST.get('receiver_name')
         receiver_address = request.POST.get('receiver_address')
+        receiver_company = request.POST.get('receiver_company')
         receiver_tel = request.POST.get('receiver_tel')
         receiver_city = request.POST.get('receiver_city')
         receiver_country = request.POST.get('receiver_country')
@@ -184,11 +195,13 @@ def accept_parcel(request):
             awb_type=awb_type,
             sender_address=sender_address,
             sender_city=sender_city,
+            sender_company=sender_company,
             sender_country=sender_country,
             receiver_name=receiver_name,
             receiver_tel=receiver_tel,
             receiver_address=receiver_address,
             receiver_city=receiver_city,
+            receiver_company=receiver_company,
             receiver_country=receiver_country,
             desc=desc,
             freight=freight,
@@ -201,6 +214,7 @@ def accept_parcel(request):
             height=height,
             width=width,
             length=length,
+            user=request.user,
             currency=currency,
             date_received=date_received,
             expected_arrival_date=expected_arrival_date,
@@ -208,7 +222,7 @@ def accept_parcel(request):
             payment_mode=payment_mode,
             accepted=True,
         )
-        awb_status = MasterStatus.objects.create(master=parcel, status='accepted', date=datetime.datetime.now().date(), time=datetime.datetime.now().time(), terminal='CAN - Guanzhou')
+        awb_status = MasterStatus.objects.create(master=parcel, user=request.user, status='accepted', date=datetime.datetime.now().date(), time=datetime.datetime.now().time(), terminal='CAN - Guanzhou')
         return JsonResponse({
             'id': parcel.id,
             'awb': parcel.awb,
@@ -217,11 +231,13 @@ def accept_parcel(request):
             'sender_tel': parcel.sender_tel,
             'sender_address': parcel.sender_address,
             'sender_city': parcel.sender_city,
+            'sender_company': parcel.sender_company,
             'sender_country': parcel.sender_country,
             'receiver_name': parcel.receiver_name,
             'receiver_address': parcel.receiver_address,
             'receiver_tel': parcel.receiver_tel,
             'receiver_city': parcel.receiver_city,
+            'receiver_company': parcel.receiver_company,
             'receiver_country': parcel.receiver_country,
             'desc': parcel.desc,
             'freight': parcel.freight,
@@ -297,8 +313,8 @@ def add_parcel(request):
             payment_mode=payment_mode,
         )
 
-        sub_parcels = Slaveawb.objects.filter(master=id, date_received=date_received)
-        awb_status = SlaveStatus.objects.create(sub_awb=parcel, status='accepted', date=datetime.datetime.now().date(), time=datetime.datetime.now().time(), terminal='CAN - Guanzhou')
+        sub_parcels = Slaveawb.objects.filter(master=id, user=request.user, date_received=date_received)
+        awb_status = SlaveStatus.objects.create(sub_awb=parcel, user=request.user, status='accepted', date=datetime.datetime.now().date(), time=datetime.datetime.now().time(), terminal='CAN - Guanzhou')
         return JsonResponse({
             'id': parcel.id,
             'desc': parcel.desc,
@@ -542,6 +558,28 @@ def released_master_status(request):
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
+
+
+@login_required
+def payment_master_status(request):
+    if request.method == 'POST':
+        awb_list = request.POST.getlist('id[]')
+        status = request.POST.get('status')
+        date = request.POST.get('date')
+        time = request.POST.get('time')
+        note = request.POST.get('note')
+        terminal = request.POST.get('terminal')
+        for id in awb_list:
+            awb = Masterawb.objects.get(pk=id) 
+            awb.released = False
+            awb.account = True 
+            awb.save()
+            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
+            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+        return redirect('accept_console')
+
+
+
 @login_required
 def pod_master_status(request):
     if request.method == 'POST':
@@ -561,6 +599,8 @@ def pod_master_status(request):
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
         return redirect('accept_console')
 
+
+
 @login_required
 def delivered_master_status(request):
     if request.method == 'POST':
@@ -572,7 +612,7 @@ def delivered_master_status(request):
         terminal = request.POST.get('terminal')
         for id in awb_list:
             awb = Masterawb.objects.get(pk=id) 
-            awb.under_clearance = False
+            awb.invoice_paid = False
             awb.delivered = True 
             awb.save()
             awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
@@ -810,47 +850,63 @@ class InvoiceListView(View):
         context = {
             "invoices": invoices,
         }
-
         return render(self.request, 'invoice/invoice-list.html', context)
     
-    def post(self, request):        
-        # import pdb;pdb.set_trace()
+    def post(self, request):
         invoice_ids = request.POST.getlist("invoice_id")
         invoice_ids = list(map(int, invoice_ids))
 
         update_status_for_invoices = int(request.POST['status'])
         invoices = Invoice.objects.filter(id__in=invoice_ids)
-        # import pdb;pdb.set_trace()
-        if update_status_for_invoices == 0:
-            invoices.update(status=False)
-        else:
-            invoices.update(status=True)
+
+        for invoice in invoices:
+            awb = invoice.awb
+            if update_status_for_invoices == 0:
+                invoice.status = False
+            else:
+                invoice.status = True
+                awb.account = False
+                awb.invoice_paid = True
+                awb.save()
+                MasterStatus.objects.create(
+                    master=awb, 
+                    user=request.user, 
+                    status='invoice paid', 
+                    date=timezone_now().date(), 
+                    time=timezone_now().time(), 
+                    terminal='DAR - Dar es salaam',  # Replace this with actual terminal information if needed
+                    note='Invoice marked as paid'
+                )
+            invoice.save()
 
         return redirect('invoice-list')
 
+@login_required
 def createInvoice(request, pk):
     """
-    Invoice Generator page it will have Functionality to create new invoices, 
-    this will be protected view, only admin has the authority to read and make
-    changes here.
+    Invoice Generator page. It will have functionality to create new invoices.
+    This view is protected; only admin has the authority to read and make changes here.
     """
     awb = Masterawb.objects.get(id=pk)
     heading_message = 'Formset Demo'
     if request.method == 'POST':
         customer = request.POST.get('customer')
         customer_phone = request.POST.get('customer_phone')
+        origin = request.POST.get('origin')
         billing_address = request.POST.get('billing_address')
         date = request.POST.get('date')
         due_date = request.POST.get('due_date')
-        invoice = Invoice.objects.create(customer=customer,
-                                         customer_phone=customer_phone,
-                                         billing_address=billing_address,
-                                         date=date,
-                                         due_date=due_date,
-                                         )
+        invoice = Invoice.objects.create(
+            customer=customer,
+            awb=awb,
+            origin=origin,
+            customer_phone=customer_phone,
+            billing_address=billing_address,
+            date=date,
+            due_date=due_date,
+            user=request.user
+        )
 
-        # import pdb;pdb.set_trace()
-        # extract name and other data from each form and save
         total_tz = 0
         total_usd = 0
 
@@ -869,24 +925,28 @@ def createInvoice(request, pk):
             total_tz += amount_tz
             amount_usd = float(rate) * float(chargable_weight)
             total_usd += amount_usd
-            LineItem.objects.create(customer=invoice,
-                                    service=service,
-                                    description=description,
-                                    quantity=quantity,
-                                    chargable_weight=chargable_weight,
-                                    rate=rate,
-                                    amount_tz=amount_tz,
-                                    amount_usd=amount_usd
-                                    )
+            LineItem.objects.create(
+                customer=invoice,
+                service=service,
+                description=description,
+                tracking_key=awb.awb,  # Assuming tracking_key is a field in Masterawb
+                quantity=quantity,
+                chargable_weight=chargable_weight,
+                rate=rate,
+                amount_tz=amount_tz,
+                amount_usd=amount_usd
+            )
             invoice.total_amount_tzs = total_tz
             invoice.total_amount_usd = total_usd
             invoice.save()
 
-            try:
-                generate_PDF(request, id=invoice.id)
-            except Exception as e:
-                print(f"********{e}********")
-            return redirect('invoice-list')
+        try:
+            generate_PDF(request, id=invoice.id)
+        except Exception as e:
+            print(f"********{e}********")
+
+        return redirect('invoice-list')
+    
     context = {
         "title": "Sifex Invoice Generator",
         "awb": awb,
@@ -908,6 +968,7 @@ def view_PDF(request, id=None):
             "TIN": "142-996-014",
         },
         "invoice_id": invoice.id,
+        "invoice_origin": invoice.origin,
         "invoice_total_usd": invoice.total_amount_usd,
         "invoice_total_tzs": invoice.total_amount_tzs,
         "customer": invoice.customer,
@@ -1013,13 +1074,13 @@ def awb_edit(request, pk):
         return redirect('parcel_view', master_awb.id)
 
 def invoice_generation(request):
-    pcs = Masterawb.objects.filter(POD=True)
-    exchange_rate = SystemPreference.objects.all()[:1]
+    pcs = Masterawb.objects.filter(account=True)
+    exchange_rate = SystemPreference.objects.first()
     ctx = {
         'pcs': pcs,
         'exchange_rate': exchange_rate,
     }
-    return render(request, 'invoice/generate-invoice.html', ctx)
+    return render(request, 'invoice/generate_invoice.html', ctx)
 
 def list_of_delivered_awb(request):
     return render(request, 'system/reports/delivered-goods.html', {})
@@ -1185,13 +1246,15 @@ def register_staff(request):
         return redirect('customers-list')
     return render(request, 'system/staff/create.html', {})
 
-# Zebra printer setup
+
+
+
 @login_required
 def print_label(request, pk):
     awb = get_object_or_404(Masterawb, pk=pk)
 
     # Create a file-like buffer to receive PDF data.
-    buffer = io.BytesIO()
+    buffer = BytesIO()
 
     # Create the PDF object, using the buffer as its "file."
     p = canvas.Canvas(buffer, pagesize=(4 * inch, 6 * inch))  # Size for Zebra and thermal printers
@@ -1205,36 +1268,44 @@ def print_label(request, pk):
     # Draw border around the label
     p.rect(10, 10, 4 * inch - 20, 6 * inch - 20)  # Draw border with margins
     
+    # Add the logo image
+    logo_path = finders.find('assets/system/assets/sifex/logo.png')
+    if logo_path:
+        p.drawImage(logo_path, 20, 350, width=80, mask='auto')
+    else:
+        p.drawString(20, 350, "Logo not found")
+    
     # Add the barcode
     barcode_value = awb.awb
-    barcode = Code128(barcode_value, writer=ImageWriter())
-    barcode_buffer = io.BytesIO()
-    barcode.write(barcode_buffer)
-    barcode_image = PILImage.open(barcode_buffer)
-    barcode_image.save("barcode.png")
-
-    p.drawImage("barcode.png", 20, 480, width=200, height=50)
-    p.drawString(50, 470, barcode_value)
+    barcode = code128.Code128(barcode_value, barHeight=10*mm, barWidth=0.5*mm)
+    barcode.drawOn(p, 20, 390)
+    p.drawString(100, 380, barcode_value)
 
     # Add horizontal lines for separation
-    y_positions = [460, 440, 420, 400, 380, 360, 340, 320, 300, 280, 260, 240, 220, 200, 180, 160]
-    for y in y_positions:
-        p.line(20, y, 4 * inch - 20, y)
+    # y_positions = [450, 430, 410, 390, 370, 350, 330, 310, 290, 270, 250, 230, 210, 190, 170, 150]
+    # for y in y_positions:
+    #     p.line(20, y, 4 * inch - 20, y)
     
     # Add sender and receiver information
     info = [
-        ("Sender:", awb.sender_name),
-        ("Phone:", awb.sender_tel),
-        ("Receiver:", awb.receiver_name),
-        ("Receiver Phone:", awb.receiver_tel),
-        ("Receiver Address:", awb.receiver_address),
-        ("Payment type:", awb.payment_mode),
-        ("Number of pieces:", str(awb.awb_pcs)),
-        ("Chargeable weight:", f"{awb.awb_kg} kg"),
-        ("Desc:", awb.desc)
+        ("Sender Name:", awb.sender_name or ''),
+        ("Sender Address:", awb.sender_address or ''),
+        ("Sender Company:", awb.sender_company or ''),
+        ("Sender Phone:", awb.sender_tel or ''),
+        ("Receiver Name:", awb.receiver_name or ''),
+        ("Receiver Address:", awb.receiver_address or ''),
+        ("Receiver Company:", awb.receiver_company or ''),
+        ("Receiver Phone:", awb.receiver_tel or ''),
+        ("Payment type:", awb.payment_mode or ''),
+        ("Number of pieces:", str(awb.awb_pcs) or ''),
+        ("Chargeable weight:", f"{awb.awb_kg} kg" if awb.awb_kg else ''),
+        ("Volume:", awb.volume or ''),
+        ("Desc:", awb.desc or ''),
+        ("", ''),
+        ("RECEIVER'S SIGNATURE:",  '')
     ]
 
-    y = 325
+    y = 300
     for label, value in info:
         p.drawString(20, y, label)
         p.drawString(130, y, value)
@@ -1252,3 +1323,36 @@ def print_label(request, pk):
     return response
 
 
+
+
+@login_required
+def search_parcel(request):
+    query = request.GET.get('query')
+    if query:
+        parcels = Masterawb.objects.filter(
+            Q(awb__icontains=query) | Q(order_number__icontains=query)
+        )
+        if parcels.exists():
+            return redirect('search_found', pk=parcels.first().id)
+        else:
+            logger.info(f"No parcel found for query: {query}")
+            return render(request, 'system/parcels/search/search_results.html', {'error': 'No parcel found.'})
+    else:
+        logger.info("No query provided.")
+        return render(request, 'system/parcels/search/search_results.html', {'error': 'Please enter a search term.'})
+
+
+
+@login_required
+def search_found(request, pk):
+    pc = Masterawb.objects.get(id=pk)
+    master_status = pc.master_status.all()
+    slave_pcs = pc.slave_master.filter(accepted=True)
+    form = MasterForm(instance=pc)
+    context = {
+        'form': form,
+        'master_awb': pc,
+        'master_status': master_status,
+        'slave_pcs': slave_pcs,
+    }
+    return render(request, 'system/parcels/search/search_found.html', context)

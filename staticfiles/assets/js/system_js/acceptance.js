@@ -170,9 +170,6 @@ function hideacceptform(e){
                 <div class="col-lg-8 col-md-8 col-sm-6 col-6">
                     <div class="row mt-9">
                         <div class="col-md-3 col-lg-3 col-sm-4">
-                            <button type="button" id="add-parcel-btn" class="btn btn-primary">add</button>
-                        </div>
-                        <div class="col-md-3 col-lg-3 col-sm-4">
                             <button type="button" id="save-response-btn" class="btn btn-primary disabled"> save</button>
                         </div>
                         <div class="col-md-3 col-lg-3 col-sm-4">
@@ -183,7 +180,7 @@ function hideacceptform(e){
                 <div class="col-lg-4 col-md-4 col-sm-6 col-6">
                     <div class="row">
                         <div class="col-md-4 col-lg-4 col-sm-4">
-                            <button type="reset" class="btn btn-danger">cancel</button>
+                            <a href="/sifex/accept_console/" class="btn btn-danger">cancel</a>
                         </div>
                     </div>
                 </div>

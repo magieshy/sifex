@@ -9,6 +9,10 @@ urlpatterns = [
     # printing
     path('print_label/<int:pk>/', print_label, name='print_label'),
 
+    # search
+    path('search/', search_parcel, name='search_parcel'),
+    path('search/<int:pk>/', search_found, name='search_found'),
+
     path('accept_console/', accept_console, name="accept_console"),
     path('accept_loaded_console/', accept_loaded_console, name="accept_loaded_console"),
     path('accept_manifested_console/', accept_manifested_console, name="accept_manifested_console"),
@@ -33,6 +37,7 @@ urlpatterns = [
     path('delivered/', delivered_master_status, name="delivered_master_status"),
     path('released/', released_master_status, name="released_master_status"),
     path('pod/', pod_master_status, name="pod_master_status"),
+    path('payment/', payment_master_status, name="payment_master_status"),
     path('loaded/sub/', add_sub_status, name="load_sub_status"),
     path('manifested/sub/', add_sub_status, name="load_sub_status"),
 

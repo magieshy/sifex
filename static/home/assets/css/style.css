@@ -2815,18 +2815,6 @@ hero-btn {
     color: #f12222
 }
 
-.slider-area form.search-box {
-    display: flex;
-    flex-wrap: wrap;
-    border-radius: 50px;
-    margin-bottom: 15px
-}
-
-.slider-area form.search-box .input-form {
-    width: 53%;
-    position: relative;
-    overflow: hidden
-}
 
 @media only screen and (min-width: 576px) and (max-width: 767px) {
     .slider-area form.search-box .input-form {

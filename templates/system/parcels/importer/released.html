@@ -67,7 +67,7 @@
         <div class="col-md-12 col-lg-12 col-sm-12 d-flex justify-content-between">
             <div class="form-group">
                 <select name="status" id="id_status" class="form-control">
-                    <option value="delivered" class="form-control">delivered</option>
+                    <option value="in payment progress" class="form-control">payment progress</option>
                 </select>
                 
             </div>
@@ -171,7 +171,7 @@
                 console.log(id)
                 $.ajax({
                     type: 'POST',
-                    url: '/sifex/delivered/',
+                    url: '/sifex/payment/',
                     data: {
                         'csrfmiddlewaretoken': csrftoken,
                         id,

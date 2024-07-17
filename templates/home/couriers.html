@@ -1,13 +1,22 @@
 
 {% extends 'home/base.html' %}
 {% block title %}parcel found{% endblock title %}
+{% block style %}
+<style>
+    .btn:hover {
+        color: #fff;
+    }
+</style>
+{% endblock %}
 {% block content %}
+<br><br><br><br><br><br><br>
 <div class="container courier-tracking">
 <div class="row">
 <div class="col-md-6 col-lg-6 col-sm-12">
             
 {% if courier_packages %}
 {% for courier in courier_packages %}
+
 <div class="card mt-15">
     <div class="card-header">
         <h5 class="card-header-text"><i class="icofont icofont-ui-note m-r-10"></i>{{courier.awb}} Details</h5>
@@ -125,7 +134,7 @@
                 <code>{{errors}}</code> 
                 
                 </center>
-                <a class="btn" href="{% url 'home' %}">Return</a>
+                <a class="btn" href="{% url 'home' %}">Back Home</a>
             </div>
             {% endif %}
         </div>

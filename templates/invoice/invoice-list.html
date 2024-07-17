@@ -22,6 +22,8 @@
                             <tr>
                                 <th></th>
                                 <th>INVOICE</th>
+                                <th>TRACKING NUMBER</th>
+                                <th>ORIGIN</th>
                                 <th>CUSTOMER</th>
                                 <th>DATE</th>
                                 <th>DUE DATE</th>
@@ -39,6 +41,8 @@
                             <td><input class="checkbox" type="checkbox" value="{{invoice.id}}" name="invoice_id" size="1" />
                             </td>
                             <td width="1%">#{{invoice.id}}</td>
+                            <td width="9%">{{invoice.awb.awb}}</td>
+                            <td width="9%">{{invoice.origin}}</td>
                             <td width="9%">{{invoice.customer}}</td>
                             <td> {{invoice.date}}</td>
                             <td> {{invoice.due_date}} </td>
@@ -60,7 +64,6 @@
                             <!-- <td width="1%"><a href="{% url 'invoice-download' id=invoice.id %}">Download</a></td> -->
                         </tr>
                         {% endfor %}
-
                     </tbody>
                 </table>
 
@@ -80,8 +83,15 @@
                     <option value="0">Not Paid</option>
                 </select>
             </div>
-            <input class="button  is-info is-rounded" type="submit" class="btn" value="Change Status" name="mybtn">
+            <br>
+          
         </div>
+        <div class="container">
+            <div class="row bt-20">
+                <input class="button btn btn-secondary  is-info is-rounded" type="submit" class="btn" value="Mark Payment" name="mybtn">
+            </div>
+        </div>
+       
     </div>
 </form>
 

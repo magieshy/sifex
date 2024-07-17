@@ -16,6 +16,9 @@
 
 <link rel="stylesheet" href="{% static 'system/assets/css/animate.css' %}">
 
+<!-- home style for preloader -->
+<link rel="stylesheet" href="{% static 'home/assets/css/style.css' %}">
+
 <link rel="stylesheet" href="{% static 'system/assets/css/dataTables.bootstrap4.min.css' %}">
 <link rel="stylesheet" href="{% static 'system/assets/plugins/select2/css/select2.min.css' %}">
 
@@ -29,6 +32,16 @@
 <script src="{% static 'invoice/js/bulma-calendar.min.js' %}"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.0/css/bulma.min.css">
 {% block style %}{% endblock %}
+<style>
+    .preloader {
+            transition: opacity 0.5s ease;
+        }
+
+        .preloader.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+</style>
 <script>
     function getCookie(name) {
     let cookieValue = null;
@@ -47,11 +60,48 @@
 }
 const csrftoken = getCookie('csrftoken');
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var preloader = document.getElementById('preloader-active');
+        preloader.classList.add('hide');
+
+        window.addEventListener('scroll', function() {
+            var header = document.querySelector('.header-bottom');
+            if (window.scrollY > 0) {
+                header.classList.add('header-sticky');
+            } else {
+                header.classList.remove('header-sticky');
+            }
+        });
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    });
+</script>
 </head>
 <body>
-<div id="global-loader">
+<!-- <div id="global-loader">
 <div class="whirly-loader"></div>
+</div> -->
+
+<!-- Preloader Start -->
+<div id="preloader-active">
+    <div class="preloader d-flex align-items-center justify-content-center">
+        <div class="preloader-inner position-relative">
+            <div class="preloader-circle"></div>
+            <div class="preloader-img pere-text">
+                <img src="{% static 'home/assets/img/logo/loder.jpg' %}" alt="">
+            </div>
+        </div>
+    </div>
 </div>
+<!-- Preloader End -->
 
 <div class="main-wrapper">
     {% include 'system/partials/navbar.html' %}
@@ -94,7 +144,10 @@ const csrftoken = getCookie('csrftoken');
 <script src="{% static 'system/assets/js/system_js/acceptance.js' %}"></script>
 <script src="{% static 'system/assets/js/system_js/main.js' %}"></script>
 <script src="https://unpkg.com/html5-qrcode"></script>
+<script src="{% static 'home/assets/js/main.js' %}"></script>
 {% block script %}
+
+
 <script>
     $('#toast').delay(2000).fadeOut('slow')
 </script>

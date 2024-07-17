@@ -11,7 +11,7 @@ from django.utils.timezone import now
 class Carousel(models.Model):
     title = models.CharField(max_length=200, null=True, blank=True, verbose_name='Carousel title')
     description = models.TextField(null=True, blank=True, verbose_name='Carousel description')
-    carousel_image = models.ImageField(verbose_name='Carousel image')
+    carousel_image = models.ImageField(verbose_name='Carousel image', upload_to='carousel/')
     def __str__(self):
         return self.title
 
