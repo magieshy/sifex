@@ -39,9 +39,10 @@ from io import BytesIO
 
 # another approch
 
-from reportlab.lib.pagesizes import inch
-from reportlab.pdfgen import canvas
-from reportlab.graphics.barcode import code128
+from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing
+from reportlab.platypus import Image as PlatypusImage, SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
 
 
@@ -1269,11 +1270,11 @@ def print_label(request, pk):
     p.rect(10, 10, 4 * inch - 20, 6 * inch - 20)  # Draw border with margins
     
     # Add the logo image
-    logo_path = finders.find('assets/system/assets/sifex/logo.png')
-    if logo_path:
-        p.drawImage(logo_path, 20, 350, width=80, mask='auto')
+    logo_path = os.path.join(settings.STATIC_ROOT, 'assets/img/sifex/logo.png')
+    if os.path.exists(logo_path):
+        p.drawImage(logo_path, 20, 330, width=0.8 * inch, height=0.5 * inch, mask='auto')
     else:
-        p.drawString(20, 350, "Logo not found")
+        p.drawString(20, 330, "Logo not found")
     
     # Add the barcode
     barcode_value = awb.awb
