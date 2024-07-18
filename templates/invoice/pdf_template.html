@@ -1,36 +1,36 @@
-<!DOCTYPE html>{% load static%}
+<!DOCTYPE html>
+{% load static %}
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <title>sifex invoice</title>
-    <link rel="stylesheet" href="{%static 'invoice/css/invoice-template-1.css' %}" media="all" />
+    <link rel="stylesheet" href="{% static 'invoice/css/invoice-template-1.css' %}" media="all" />
     <link rel="shortcut icon" type="image/x-icon" href="{% static 'system/assets/img/sifex/favicon.png' %}">
   </head>
   <body>
     <header class="clearfix">
       <div id="logo">
-        <img src="{% static 'system/assets/img/sifex/logo.png' %}" style="width: 140px;"> 
+        <img src="{% static 'system/assets/img/sifex/logo.png' %}" style="width: 140px;">
       </div>
       <div id="company">
-        <h1 class="name">{{company.name}}</h1>
-        <div>{{company.address}}</div>
-        <div>{{company.phone}}</div>
-        <div>{{company.TIN}}</div>
-      </div>
+        <h1 class="name">{{ company.name }}</h1>
+        <div>{{ company.address }}</div>
+        <div>{{ company.phone }}</div>
+        <div>{{ company.TIN }}</div>
       </div>
     </header>
     <main>
       <div id="details" class="clearfix">
         <div id="client">
           <div class="to">INVOICE TO:</div>
-          <h2 class="name">{{customer}}</h2>
-          <div class="address">{{billing_address}}</div>
-          <div class="email"><a href="mailto:{{customer_email}}">{{customer_email}}</a></div>
+          <h2 class="name">{{ customer }}</h2>
+          <div class="address">{{ billing_address }}</div>
+          <div class="email"><a href="mailto:{{ customer_email }}">{{ customer_email }}</a></div>
         </div>
         <div id="invoice">
-          <h1>#{{invoice_id}}</h1>
-          <div class="date">Date of Invoice: {{date}}</div>
-          <div class="date">Due Date: {{due_date}}</div>
+          <h1>#{{ invoice_id }}</h1>
+          <div class="date">Date of Invoice: {{ date }}</div>
+          <div class="date">Due Date: {{ due_date }}</div>
         </div>
       </div>
       <table border="0" cellspacing="0" cellpadding="0">
@@ -47,40 +47,40 @@
           </tr>
         </thead>
         <tbody>
-			{% for item in lineitem %}
+          {% for item in lineitem %}
           <tr>
-            <td class="no">{{forloop.counter}}</td>
-            <td class="desc">{{item.service}}</td>
-            <td class="unit">${{item.rate}}</td>
-            <td class="unit">{{invoice_origin}}</td>
-            <td class="qty">{{item.quantity}}</td>
-            <td class="qty">{{item.chargable_weight}}</td>
-            <td class="total">Tzs {{item.amount_tz}}</td>
-            <td class="total">${{item.amount_usd}}</td>
-		  </tr>
-		  {% endfor %}
+            <td class="no">{{ forloop.counter }}</td>
+            <td class="desc">{{ item.service }}</td>
+            <td class="unit">${{ item.rate }}</td>
+            <td class="unit">{{ item.origin }}</td>
+            <td class="qty">{{ item.quantity }}</td>
+            <td class="qty">{{ item.chargable_weight }}</td>
+            <td class="total">Tzs {{ item.amount_tz }}</td>
+            <td class="total">${{ item.amount_usd }}</td>
+          </tr>
+          {% endfor %}
         </tbody>
         <tfoot>
           <tr>
             <td colspan="2"></td>
             <td colspan="2">SUBTOTAL</td>
-            <td>${{invoice_total}}</td>
+            <td>${{ invoice_total }}</td>
           </tr>
           <tr>
             <td colspan="2"></td>
             <td colspan="2">TOTAL IN USD</td>
-            <td>${{invoice_total_usd}}</td>
+            <td>${{ invoice_total_usd }}</td>
           </tr>
           <tr>
             <td colspan="2"></td>
             <td colspan="2">TOTAL IN TZS</td>
-            <td>Tzs {{invoice_total_tzs}}</td>
+            <td>Tzs {{ invoice_total_tzs }}</td>
           </tr>
         </tfoot>
       </table>
       <div id="thanks">Thank you!</div>
       <div id="notices">
-        <h3>PAY MENT INSTRUCTION:</h3>
+        <h3>PAYMENT INSTRUCTION:</h3>
         <div class="notice">
           <span>BANK NAME:</span>
           <span>NMB BANK, AIRPORT BRANCH</span>

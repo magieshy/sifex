@@ -852,7 +852,7 @@ class InvoiceListView(View):
             "invoices": invoices,
         }
         return render(self.request, 'invoice/invoice-list.html', context)
-    
+
     def post(self, request):
         invoice_ids = request.POST.getlist("invoice_id")
         invoice_ids = list(map(int, invoice_ids))
@@ -870,11 +870,11 @@ class InvoiceListView(View):
                 awb.invoice_paid = True
                 awb.save()
                 MasterStatus.objects.create(
-                    master=awb, 
-                    user=request.user, 
-                    status='invoice paid', 
-                    date=timezone_now().date(), 
-                    time=timezone_now().time(), 
+                    master=awb,
+                    user=request.user,
+                    status='invoice paid',
+                    date=timezone_now().date(),
+                    time=timezone_now().time(),
                     terminal='DAR - Dar es salaam',  # Replace this with actual terminal information if needed
                     note='Invoice marked as paid'
                 )
@@ -884,10 +884,6 @@ class InvoiceListView(View):
 
 @login_required
 def createInvoice(request, pk):
-    """
-    Invoice Generator page. It will have functionality to create new invoices.
-    This view is protected; only admin has the authority to read and make changes here.
-    """
     awb = Masterawb.objects.get(id=pk)
     heading_message = 'Formset Demo'
     if request.method == 'POST':
@@ -944,19 +940,25 @@ def createInvoice(request, pk):
         try:
             generate_PDF(request, id=invoice.id)
         except Exception as e:
-            print(f"********{e}********")
+            logger.error(f"Error generating PDF: {e}")
 
         return redirect('invoice-list')
-    
+
     context = {
         "title": "Sifex Invoice Generator",
         "awb": awb,
     }
     return render(request, 'invoice/invoice-create.html', context)
 
+
+@login_required
 def view_PDF(request, id=None):
     invoice = get_object_or_404(Invoice, id=id)
     lineitem = invoice.lineitem_set.all()
+
+    invoice_total_usd = sum(item.amount_usd for item in lineitem)
+    invoice_total_tzs = sum(item.amount_tz for item in lineitem)
+    invoice_total = invoice_total_usd  # Assuming USD is the main currency
 
     context = {
         "company": {
@@ -970,17 +972,18 @@ def view_PDF(request, id=None):
         },
         "invoice_id": invoice.id,
         "invoice_origin": invoice.origin,
-        "invoice_total_usd": invoice.total_amount_usd,
-        "invoice_total_tzs": invoice.total_amount_tzs,
+        "invoice_total": invoice_total,
+        "invoice_total_usd": invoice_total_usd,
+        "invoice_total_tzs": invoice_total_tzs,
         "customer": invoice.customer,
         "customer_email": invoice.customer_email,
         "date": invoice.date,
         "due_date": invoice.due_date,
         "billing_address": invoice.billing_address,
         "lineitem": lineitem,
-
     }
     return render(request, 'invoice/pdf_template.html', context)
+
 
 def generate_PDF(request, id):
     # Use False instead of output path to save pdf to a variable
