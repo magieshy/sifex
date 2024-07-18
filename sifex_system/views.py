@@ -885,7 +885,7 @@ class InvoiceListView(View):
 @login_required
 def createInvoice(request, pk):
     awb = Masterawb.objects.get(id=pk)
-    heading_message = 'Formset Demo'
+    heading_message = 'Formset'
     if request.method == 'POST':
         customer = request.POST.get('customer')
         customer_phone = request.POST.get('customer_phone')
@@ -937,12 +937,7 @@ def createInvoice(request, pk):
             invoice.total_amount_usd = total_usd
             invoice.save()
 
-        try:
-            generate_PDF(request, id=invoice.id)
-        except Exception as e:
-            logger.error(f"Error generating PDF: {e}")
-
-        return redirect('invoice-list')
+            return redirect('invoice-list')
 
     context = {
         "title": "Sifex Invoice Generator",
