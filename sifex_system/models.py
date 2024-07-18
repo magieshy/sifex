@@ -87,8 +87,8 @@ class Masterawb(models.Model):
     arrived = models.BooleanField(default=False)
     under_clearance = models.BooleanField(default=False)
     released = models.BooleanField(default=False)
-    account = models.BooleanField(default=False)
-    invoice_paid = models.BooleanField(default=False)
+    bill = models.BooleanField(default=False)
+    billed = models.BooleanField(default=False)
     delivered = models.BooleanField(default=False)
     POD = models.BooleanField(default=False)
     

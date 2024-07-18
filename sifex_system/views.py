@@ -125,7 +125,7 @@ def accept_release_console(request):
 
 @login_required
 def accept_delivered_console(request):
-    pcs = Masterawb.objects.filter(invoice_paid=True).order_by('-date_received')
+    pcs = Masterawb.objects.filter(billed=True).order_by('-date_received')
     context = {
         'pcs': pcs,
     }
@@ -573,7 +573,7 @@ def payment_master_status(request):
         for id in awb_list:
             awb = Masterawb.objects.get(pk=id) 
             awb.released = False
-            awb.account = True 
+            awb.bill = True 
             awb.save()
             awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
             messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
@@ -866,13 +866,13 @@ class InvoiceListView(View):
                 invoice.status = False
             else:
                 invoice.status = True
-                awb.account = False
-                awb.invoice_paid = True
+                awb.bill = False
+                awb.billed = True
                 awb.save()
                 MasterStatus.objects.create(
                     master=awb,
                     user=request.user,
-                    status='invoice paid',
+                    status='invoice billed',
                     date=timezone_now().date(),
                     time=timezone_now().time(),
                     terminal='DAR - Dar es salaam',  # Replace this with actual terminal information if needed
@@ -1073,7 +1073,7 @@ def awb_edit(request, pk):
         return redirect('parcel_view', master_awb.id)
 
 def invoice_generation(request):
-    pcs = Masterawb.objects.filter(account=True)
+    pcs = Masterawb.objects.filter(bill=True)
     exchange_rate = SystemPreference.objects.first()
     ctx = {
         'pcs': pcs,
