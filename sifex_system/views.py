@@ -41,7 +41,8 @@ from io import BytesIO
 
 from reportlab.graphics import renderPDF
 from reportlab.graphics.shapes import Drawing
-from reportlab.platypus import Image as PlatypusImage, SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.platypus import Image as PlatypusImage, SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
 
@@ -1072,6 +1073,128 @@ def awb_edit(request, pk):
         master_awb.save()
         return redirect('parcel_view', master_awb.id)
 
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.pdfgen import canvas
+from io import BytesIO
+from django.http import HttpResponse
+from django.conf import settings
+import os
+
+@login_required
+def generate_invoice_pdf(request, invoice_id):
+    # Get the invoice data
+    invoice = Invoice.objects.get(id=invoice_id)
+    lineitems = LineItem.objects.filter(customer=invoice)
+
+    # Create a file-like buffer to receive PDF data
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+
+    # Draw the logo and company info
+    logo_path = os.path.join(settings.STATIC_ROOT, 'assets/img/sifex/logo.png')
+    if os.path.exists(logo_path):
+        p.drawImage(logo_path, 40, 750, width=140, height=50, mask='auto')
+    else:
+        p.drawString(40, 750, "Logo not found")
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(200, 750, "SIFEX COURIER COMPANY LIMITED")
+    p.setFont("Helvetica", 10)
+    p.drawString(200, 735, "Dar es salaam, Ilala, Kipawa street-Plot No 236 Zakhem Plaza")
+    p.drawString(200, 720, "1st Floor")
+    p.drawString(200, 705, "(+255) 688 930 963")
+    p.drawString(200, 690, "TIN: 142-996-014")
+
+    # Add customer info
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(40, 670, "INVOICE TO:")
+    p.setFont("Helvetica", 10)
+    p.drawString(40, 655, invoice.customer)
+    p.drawString(40, 640, invoice.billing_address)
+    p.drawString(40, 625, invoice.customer_phone)
+    if invoice.customer_email:
+        p.drawString(40, 610, invoice.customer_email)
+
+    # Add invoice details
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(40, 580, f"Invoice #{invoice.id}")
+    p.setFont("Helvetica", 10)
+    p.drawString(40, 565, f"Date of Invoice: {invoice.date}")
+    p.drawString(40, 550, f"Due Date: {invoice.due_date}")
+
+    # Create table for line items
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+    styleN.wordWrap = 'CJK'
+
+    data = [["#", "AWB", "RATE", "ORIGIN", "QUANTITY", "WEIGHT", "AMOUNT IN TZS", "AMOUNT IN USD"]]
+    for idx, item in enumerate(lineitems, start=1):
+        data.append([
+            str(idx),
+            item.service,
+            f"${item.rate}",
+            item.tracking_key,
+            str(item.quantity),
+            str(item.chargable_weight),
+            f"Tzs {item.amount_tz}",
+            f"${item.amount_usd}"
+        ])
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, 1), (0, -1), colors.green),
+        ('TEXTCOLOR', (0, 1), (0, -1), colors.whitesmoke),
+        ('BACKGROUND', (-2, 1), (-1, -1), colors.red),
+        ('TEXTCOLOR', (-2, 1), (-1, -1), colors.whitesmoke),
+    ]))
+    table.wrapOn(p, 800, 600)
+    table.drawOn(p, 40, 350)
+
+    # Add totals
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(40, 300, f"SUBTOTAL: ${invoice.total_amount_usd}")
+    p.drawString(40, 285, f"TOTAL IN USD: ${invoice.total_amount_usd}")
+    p.drawString(40, 270, f"TOTAL IN TZS: Tzs {invoice.total_amount_tzs}")
+
+    # Add payment instructions
+    p.drawString(40, 240, "PAYMENT INSTRUCTION:")
+    p.setFont("Helvetica", 10)
+    p.drawString(40, 225, "BANK NAME: NMB BANK, AIRPORT BRANCH")
+    p.drawString(40, 210, "ACCOUNT NAME: SIFEX COURIER SERVICES COMPANY LTD")
+    p.drawString(40, 195, "ACCOUNT NUMBER: 23010064562")
+    p.drawString(40, 180, "TIGO LIPA NAMBA: 5026775")
+    p.drawString(40, 165, "ACCOUNT NAME: SIFEX COURIER SERVICES COMPANY LTD")
+    p.drawString(40, 150, "CURRENCY: TZS")
+
+    # Add terms and conditions
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(40, 120, "TERMS AND CONDITIONS:")
+    p.setFont("Helvetica", 10)
+    p.drawString(40, 105, "A finance charge of 1.5% will be made on unpaid balances after 30 days.")
+
+    # Finish up
+    p.showPage()
+    p.save()
+
+    # Get the value of the BytesIO buffer and write it to the response.
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')
+
+
+
+
+@login_required
 def invoice_generation(request):
     pcs = Masterawb.objects.filter(bill=True)
     exchange_rate = SystemPreference.objects.first()

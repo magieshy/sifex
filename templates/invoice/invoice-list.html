@@ -1,5 +1,6 @@
 {% extends 'system/app/index.html' %}{% load bulma_tags %}
 {% block content %}
+{% block title %}invoices{% endblock %}
 {% include 'system/partials/_messages.html' %}
 <form action="{% url 'invoice-list' %}" method="post">{% csrf_token %}
     <div class="card">
@@ -48,13 +49,13 @@
                                 <a class="button is-small is-warning" href="#">Not Paid</a>
                                 {% endif %}
                             </td>
-                            <td width="1%"><a href="{% url 'invoice-detail' id=invoice.id %}">
+                            <!-- <td width="1%"><a href="{% url 'invoice-detail' id=invoice.id %}">
                                 <div class="button is-small is-info">View</div>
-                            </a></td>
+                            </a></td> -->
                             <td width="1%"><a href="{% url 'delete-invoice' id=invoice.id %}">
                                 <div class="button is-small is-info">delete</div>
                             </a></td>
-                            <!-- <td width="1%"><a href="{% url 'invoice-download' id=invoice.id %}">Download</a></td> -->
+                            <td width="1%"><a class="button is-small is-info" href="{% url 'invoice_pdf' invoice.id %}">Download</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>

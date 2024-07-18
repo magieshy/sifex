@@ -8,6 +8,7 @@ urlpatterns = [
 
     # printing
     path('print_label/<int:pk>/', print_label, name='print_label'),
+    path('invoice/pdf/<int:invoice_id>/', generate_invoice_pdf, name='invoice_pdf'),
 
     # search
     path('search/', search_parcel, name='search_parcel'),
