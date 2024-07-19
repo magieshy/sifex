@@ -1187,7 +1187,7 @@ def generate_invoice_pdf(request, invoice_id):
             str(idx),
             item.service,
             f"${item.rate}",
-            shorten_text(invoice.origin or '', 5),
+            shorten_text(invoice.origin or '', 8),
             str(item.quantity),
             str(item.chargable_weight),
             f"Tzs {item.amount_tz}",

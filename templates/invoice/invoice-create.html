@@ -10,13 +10,13 @@
             <div class="hero-body card-body">
                 <form class="" method="POST" action="">
                     {% csrf_token %}
-                    <div class="columns is-centered">
-                        <div class="column is-one-third">
+                    <div class="row">
+                        <div class="col-md-6 col-lg-6 col-sm-6">
                             <label for="">Customer</label>
                             <input class="form-control" type="text" value="{{awb.receiver_name}}" name="customer" id="id_customer">
                         </div>
 
-                        <div class="column is-one-third">
+                        <div class="col-md-6 col-lg-6 col-sm-6 is-one-third">
                             <label for="">Customer Phone</label>
                             <input class="form-control" type="text" value="{{awb.receiver_tel}}" name="customer_phone" id="id_customer_phone">
                         </div>
@@ -27,10 +27,10 @@
                             <input class="form-control" type="text" value="{{awb.receiver_city}}" name="billing_address" id="id_billing_address">
                         </div>
                         <div class="column is-one-third">
-                            date: <input class="form-control input" type="date" required name="date">
+                            date: <input class="form-control input" type="text" required name="date" id="id_date">
                         </div>
                         <div class="column is-one-third">
-                            due-date: <input class="form-control input" type="date" required name="due_date">
+                            due-date: <input class="form-control input" type="text" required name="due_date" id="id_due_date">
                         </div>
                     </div>
 
@@ -65,36 +65,48 @@
 
                     </table>
                 </div>
-                    <div class="row spacer">
-                        <div class="col-4 offset-2">
-                            <button type="submit" class="button btn btn-success btn-block is-info is-half">Generate invoice</button>
-                        </div>
+                   <div class="row">
+
+                    <div class="col-md-4 col-lg-4">
+                        <h3 class="title is-4">Total($): <span id="total"></span></h3>
                     </div>
-                    <br>
-                    <div class="columns">
-                        <div class="column">
-                            <h3 class="title is-4">Total($): <span id="total"></span></h3>
-                        </div>
+                   
+
+                    <div class="col-md-8 col-lg-8">
+                        <button type="submit" class="button btn btn-success btn-block is-info is-half">Generate invoice</button>
                     </div>
+                 
+                   </div>
                 </form>
             </div>
         </div>
     </div>
 </section>
-
-
-
 {% endblock %}
 
 {% block script %}
+<!-- Include Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Include Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr("#id_date", {
+            dateFormat: "Y-m-d"
+        });
+        flatpickr("#id_due_date", {
+            dateFormat: "Y-m-d"
+        });
+    });
+
     $('table input').on("input", function () {
         var total = []
         var $tr = $(this).closest('tr');
         var rate = $("input.rate", $tr).val();
         var chargableWeight = $('input.chargable-weight', $tr).val();
         amt = rate * chargableWeight;
-        // console.log(amt);
         $('.amount', $tr).html(amt);
         calc_total();
     });
@@ -104,13 +116,9 @@
         $(".amount").each(function () {
             sum += parseFloat($(this).text());
         });
-        console.log(sum);
         $('#total').text(sum);
     }
-</script>
 
-
-<script type="text/javascript">
     function updateElementIndex(el, prefix, ndx) {
         var id_regex = new RegExp('(' + prefix + '-\\d+)');
         var replacement = prefix + '-' + ndx;
@@ -120,10 +128,9 @@
     }
     function cloneMore(selector, prefix) {
         var newElement = $(selector).clone(true);
-        console.log(newElement);
         var total = $('#id_' + prefix + '-TOTAL_FORMS').val();
         newElement.find(':input:not([type=button]):not([type=submit]):not([type=reset])').each(function () {
-            var name = $(this).attr('name')
+            var name = $(this).attr('name');
             if (name) {
                 name = name.replace('-' + (total - 1) + '-', '-' + total + '-');
                 var id = 'id_' + name;
@@ -140,13 +147,6 @@
         total++;
         $('#id_' + prefix + '-TOTAL_FORMS').val(total);
         $(selector).after(newElement);
-        // $("div.form-row.button.is-primary").not(":last").hide();
-        // var conditionRow = $('.form-row:not(:last)');
-        // conditionRow.find('.button.is-primary')
-        // .hide();
-        // .removeClass('btn-success').addClass('btn-danger')
-        // .removeClass('add-form-row').addClass('remove-form-row')
-        // .html('-');
         return false;
     }
     function deleteForm(prefix, btn) {
