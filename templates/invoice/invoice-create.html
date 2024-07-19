@@ -12,31 +12,30 @@
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-6 col-lg-6 col-sm-6">
-                            <label for="">Customer</label>
-                            <input class="form-control" type="text" value="{{awb.receiver_name}}" name="customer" id="id_customer">
+                            <label for="id_customer">Customer</label>
+                            <input class="form-control" type="text" value="{{awb.receiver_name}}" name="customer" id="id_customer" required>
                         </div>
-
-                        <div class="col-md-6 col-lg-6 col-sm-6 is-one-third">
-                            <label for="">Customer Phone</label>
-                            <input class="form-control" type="text" value="{{awb.receiver_tel}}" name="customer_phone" id="id_customer_phone">
+                        <div class="col-md-6 col-lg-6 col-sm-6">
+                            <label for="id_customer_phone">Customer Phone</label>
+                            <input class="form-control" type="text" value="{{awb.receiver_tel}}" name="customer_phone" id="id_customer_phone" required>
                         </div>
                     </div>
                     <div class="columns is-centered">
                         <div class="column is-one-third">
-                            <label for="">Billing Address</label>
-                            <input class="form-control" type="text" value="{{awb.receiver_city}}" name="billing_address" id="id_billing_address">
+                            <label for="id_billing_address">Billing Address</label>
+                            <input class="form-control" type="text" value="{{awb.receiver_city}}" name="billing_address" id="id_billing_address" required>
                         </div>
                         <div class="column is-one-third">
-                            date: <input class="form-control input" type="text" required name="date" id="id_date">
+                            <label for="id_date">Date</label>
+                            <input class="form-control input" type="text" name="date" id="id_date" required>
                         </div>
                         <div class="column is-one-third">
-                            due-date: <input class="form-control input" type="text" required name="due_date" id="id_due_date">
+                            <label for="id_due_date">Due Date</label>
+                            <input class="form-control input" type="text" name="due_date" id="id_due_date" required>
                         </div>
                     </div>
-
                     <div class="table-responsive">
-                    <table class="table is-fullwidth is-bordered is-hoverable is-striped datanew">
-                        <tbody>
+                        <table class="table is-fullwidth is-bordered is-hoverable is-striped datanew">
                             <thead>
                                 <tr>
                                     <th>Product/Service</th>
@@ -47,35 +46,27 @@
                                     <th>RATE</th>
                                     <th>AMOUNT$</th>
                                 </tr>
-                               
-                                
-                                <tr>
-                                    <td><input type="text" name="service" value="{{awb.awb}}" placeholder="service" class="form-control input"> </td>
-                                    <td><input type="text" name="description" value="{{awb.desc}}" placeholder="Description" class="form-control input"></td>
-                                    <td><input type="text" name="origin" value="{{awb.awb_type}}" placeholder="Origin" class="form-control input"></td>
-                                    <td><input type="text" name="quantity" value="{{awb.awb_pcs}}" placeholder="QTY" class="form-control input"></td>
-                                    <td><input type="text" name="chargable_weight" value="{{awb.chargable_weight}}" placeholder="Weight" class="form-control input chargable-weight"></td>
-                                    <td><input type="text" name="rate" value="" placeholder="Rate" class="form-control input rate"></td>
-                                    <td class="amount"></td>
-                                   
-                                </tr>
-                               
                             </thead>
-                        </tbody>
-
-                    </table>
-                </div>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" name="service" value="{{awb.awb}}" placeholder="service" class="form-control input" required></td>
+                                    <td><input type="text" name="description" value="{{awb.desc}}" placeholder="Description" class="form-control input" required></td>
+                                    <td><input type="text" name="origin" value="{{awb.awb_type}}" placeholder="Origin" class="form-control input" required></td>
+                                    <td><input type="text" name="quantity" value="{{awb.awb_pcs}}" placeholder="QTY" class="form-control input" required></td>
+                                    <td><input type="text" name="chargable_weight" value="{{awb.chargable_weight}}" placeholder="Weight" class="form-control input chargable-weight" required></td>
+                                    <td><input type="text" name="rate" value="" placeholder="Rate" class="form-control input rate" required></td>
+                                    <td class="amount"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                    <div class="row">
-
-                    <div class="col-md-4 col-lg-4">
-                        <h3 class="title is-4">Total($): <span id="total"></span></h3>
-                    </div>
-                   
-
-                    <div class="col-md-8 col-lg-8">
-                        <button type="submit" class="button btn btn-success btn-block is-info is-half">Generate invoice</button>
-                    </div>
-                 
+                        <div class="col-md-4 col-lg-4">
+                            <h3 class="title is-4">Total($): <span id="total"></span></h3>
+                        </div>
+                        <div class="col-md-8 col-lg-8">
+                            <button type="submit" class="button btn btn-success btn-block is-info is-half">Generate invoice</button>
+                        </div>
                    </div>
                 </form>
             </div>
@@ -94,10 +85,12 @@
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
         flatpickr("#id_date", {
-            dateFormat: "Y-m-d"
+            dateFormat: "Y-m-d",
+            allowInput: true
         });
         flatpickr("#id_due_date", {
-            dateFormat: "Y-m-d"
+            dateFormat: "Y-m-d",
+            allowInput: true
         });
     });
 
@@ -106,7 +99,7 @@
         var $tr = $(this).closest('tr');
         var rate = $("input.rate", $tr).val();
         var chargableWeight = $('input.chargable-weight', $tr).val();
-        amt = rate * chargableWeight;
+        var amt = rate * chargableWeight;
         $('.amount', $tr).html(amt);
         calc_total();
     });
@@ -126,6 +119,7 @@
         if (el.id) el.id = el.id.replace(id_regex, replacement);
         if (el.name) el.name = el.name.replace(id_regex, replacement);
     }
+
     function cloneMore(selector, prefix) {
         var newElement = $(selector).clone(true);
         var total = $('#id_' + prefix + '-TOTAL_FORMS').val();
@@ -149,6 +143,7 @@
         $(selector).after(newElement);
         return false;
     }
+
     function deleteForm(prefix, btn) {
         var total = parseInt($('#id_' + prefix + '-TOTAL_FORMS').val());
         if (total > 1) {
@@ -163,16 +158,17 @@
         }
         return false;
     }
+
     $(document).on('click', '.add-form-row', function (e) {
         e.preventDefault();
         cloneMore('table tr:last', 'form');
         return false;
     });
+
     $(document).on('click', '.remove-form-row', function (e) {
         e.preventDefault();
         deleteForm('form', $(this));
         return false;
     });
-
 </script>
 {% endblock %}

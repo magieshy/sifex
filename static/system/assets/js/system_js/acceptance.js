@@ -93,6 +93,50 @@ function hideacceptform(e){
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-lg-6 col-md-5 col-sm-6 col-12">
+                    <div class="form-group">
+                        <label for="sender_name" class="">Sender name</label>
+                        <input type="text" disabled class="form-control" id="id_sender_name" value="${res.sender_name}">
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-5 col-sm-6 col-12">
+                    <div class="form-group">
+                        <label for="sender_address" class="">sender address</label>
+                        <input type="text" disabled class="form-control" id="id_sender_address" value="${res.sender_address}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6 col-md-5 col-sm-6 col-12">
+                    <div class="form-group">
+                        <label for="receiver_name" class="">receiver name</label>
+                        <input type="text" disabled class="form-control" id="id_receiver_name" value="${res.receiver_name}">
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-5 col-sm-6 col-12">
+                    <div class="form-group">
+                        <label for="receiver_address" class="">receiver address</label>
+                        <input type="text" disabled class="form-control" id="id_receiver_address" value="${res.receiver_address}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+            <div class="col-lg-6 col-md-5 col-sm-6 col-12">
+                <div class="form-group">
+                    <label for="sender_company" class="">Sender Company</label>
+                    <input type="text" disabled class="form-control" id="id_sender_company" value="${res.sender_company}">
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-5 col-sm-6 col-12">
+                <div class="form-group">
+                    <label for="receiver_company" class="">Senser Company</label>
+                    <input type="text" disabled class="form-control" id="id_receiver_company" value="${res.receiver_company}">
+                </div>
+            </div>
+        </div>
             <div class="otherfields mb-3">
                 <div class="row">
                     <div class="col-md-4 col-lg-4 col-sm-12 col-12">
