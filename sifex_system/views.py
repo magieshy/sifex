@@ -46,6 +46,11 @@ from reportlab.platypus import Image as PlatypusImage, SimpleDocTemplate, Table,
 from reportlab.lib.styles import getSampleStyleSheet
 
 
+def shorten_string(text, max_length):
+    if len(text) > max_length:
+        return text[:max_length - 3] + "..."
+    return text
+
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -846,6 +851,9 @@ def on_edit_add_parcel_view(request, pk):
     ctx = {'master_awb_id': awb_id, 'form': form}
     return render(request, 'system/parcels/importer/add.html', ctx)
 
+
+
+
 class InvoiceListView(View):
     def get(self, *args, **kwargs):
         invoices = Invoice.objects.all()
@@ -858,30 +866,46 @@ class InvoiceListView(View):
         invoice_ids = request.POST.getlist("invoice_id")
         invoice_ids = list(map(int, invoice_ids))
 
-        update_status_for_invoices = int(request.POST['status'])
+        update_status_for_invoices = request.POST['status']
         invoices = Invoice.objects.filter(id__in=invoice_ids)
 
         for invoice in invoices:
             awb = invoice.awb
-            if update_status_for_invoices == 0:
-                invoice.status = False
-            else:
-                invoice.status = True
+            print(f"Before Update: {awb.bill}, {awb.billed}")  # Debug statement
+            if update_status_for_invoices == 'paid':
+                invoice.status = 'paid'
                 awb.bill = False
                 awb.billed = True
-                awb.save()
                 MasterStatus.objects.create(
                     master=awb,
                     user=request.user,
-                    status='invoice billed',
+                    status='invoice paid',
                     date=timezone_now().date(),
                     time=timezone_now().time(),
                     terminal='DAR - Dar es salaam',  # Replace this with actual terminal information if needed
                     note='Invoice marked as paid'
                 )
+            elif update_status_for_invoices == 'credited':
+                invoice.status = 'credited'
+                awb.billed = True
+                awb.bill = False
+                MasterStatus.objects.create(
+                    master=awb,
+                    user=request.user,
+                    status='invoice credited',
+                    date=timezone_now().date(),
+                    time=timezone_now().time(),
+                    terminal='DAR - Dar es salaam',  # Replace this with actual terminal information if needed
+                    note='Invoice marked as credited'
+                )
+            awb.save()  # Ensure the awb object is saved
             invoice.save()
+            print(f"After Update: {awb.bill}, {awb.billed}")  # Debug statement
 
         return redirect('invoice-list')
+
+
+
 
 @login_required
 def createInvoice(request, pk):
@@ -1104,10 +1128,30 @@ def generate_invoice_pdf(request, invoice_id):
     p.setFont("Helvetica-Bold", 12)
     p.drawString(200, 750, "SIFEX COURIER COMPANY LIMITED")
     p.setFont("Helvetica", 10)
-    p.drawString(200, 735, "Dar es salaam, Ilala, Kipawa street-Plot No 236 Zakhem Plaza")
-    p.drawString(200, 720, "1st Floor")
+    p.drawString(200, 735, "Plot No. 658 KUrasini, Mgulani, Minazini Street,")
+    p.drawString(200, 720, "Near Uhasibu College Dar es salaam")
     p.drawString(200, 705, "(+255) 688 930 963")
     p.drawString(200, 690, "TIN: 142-996-014")
+
+    # Add invoice status label
+    p.saveState()
+    p.setFont("Helvetica-Bold", 16)
+    if invoice.status == 'paid':
+        p.setFillColorRGB(0, 1, 0)  # Green color for PAID
+        p.translate(500, 730)  # Move to position
+        p.rotate(45)  # Rotate
+        p.drawString(0, 0, "PAID")
+    elif invoice.status == 'credited':
+        p.setFillColorRGB(0, 0, 1)  # Blue color for CREDITED
+        p.translate(500, 730)  # Move to position
+        p.rotate(45)  # Rotate
+        p.drawString(0, 0, "CREDITED")
+    else:
+        p.setFillColorRGB(1, 0, 0)  # Red color for UNPAID
+        p.translate(500, 730)  # Move to position
+        p.rotate(45)  # Rotate
+        p.drawString(0, 0, "UNPAID")
+    p.restoreState()
 
     # Add customer info
     p.setFont("Helvetica-Bold", 12)
@@ -1157,6 +1201,10 @@ def generate_invoice_pdf(request, invoice_id):
         ('TEXTCOLOR', (0, 1), (0, -1), colors.whitesmoke),
         ('BACKGROUND', (-2, 1), (-1, -1), colors.red),
         ('TEXTCOLOR', (-2, 1), (-1, -1), colors.whitesmoke),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
     ]))
     table.wrapOn(p, 800, 600)
     table.drawOn(p, 40, 350)
@@ -1190,6 +1238,7 @@ def generate_invoice_pdf(request, invoice_id):
     # Get the value of the BytesIO buffer and write it to the response.
     buffer.seek(0)
     return HttpResponse(buffer, content_type='application/pdf')
+
 
 
 
@@ -1403,27 +1452,28 @@ def print_label(request, pk):
     barcode.drawOn(p, 20, 390)
     p.drawString(100, 380, barcode_value)
 
-    # Add horizontal lines for separation
-    # y_positions = [450, 430, 410, 390, 370, 350, 330, 310, 290, 270, 250, 230, 210, 190, 170, 150]
-    # for y in y_positions:
-    #     p.line(20, y, 4 * inch - 20, y)
-    
+    # Function to shorten text if it's too long
+    def shorten_text(text, max_length):
+        if len(text) > max_length:
+            return text[:max_length-3] + '...'
+        return text
+
     # Add sender and receiver information
     info = [
-        ("Sender Name:", awb.sender_name or ''),
-        ("Sender Address:", awb.sender_address or ''),
-        ("Sender Company:", awb.sender_company or ''),
-        ("Sender Phone:", awb.sender_tel or ''),
-        ("Receiver Name:", awb.receiver_name or ''),
-        ("Receiver Address:", awb.receiver_address or ''),
-        ("Receiver Company:", awb.receiver_company or ''),
-        ("Receiver Phone:", awb.receiver_tel or ''),
-        ("Payment type:", awb.payment_mode or ''),
+        ("Sender Name:", shorten_text(awb.sender_name or '', 30)),
+        ("Sender Address:", shorten_text(awb.sender_address or '', 20)),
+        ("Sender Company:", shorten_text(awb.sender_company or '', 26)),
+        ("Sender Phone:", shorten_text(awb.sender_tel or '', 30)),
+        ("Receiver Name:", shorten_text(awb.receiver_name or '', 30)),
+        ("Receiver Address:", shorten_text(awb.receiver_address or '', 20)),
+        ("Receiver Company:", shorten_text(awb.receiver_company or '', 26)),
+        ("Receiver Phone:", shorten_text(awb.receiver_tel or '', 30)),
+        ("Payment type:", shorten_text(awb.payment_mode or '', 30)),
         ("Number of pieces:", str(awb.awb_pcs) or ''),
         ("Chargeable weight:", f"{awb.awb_kg} kg" if awb.awb_kg else ''),
-        ("Volume:", awb.volume or ''),
-        ("Desc:", awb.desc or ''),
-        ("", ''),
+        ("Volume:", shorten_text(awb.volume or '', 30)),
+        ("Desc:", shorten_text(awb.desc or '', 30)),
+        ("Custom value", shorten_text(awb.custom_value or '', 25)),
         ("RECEIVER'S SIGNATURE:",  '')
     ]
 
@@ -1441,7 +1491,6 @@ def print_label(request, pk):
     buffer.seek(0)
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="label_{awb.awb}.pdf"'
-
     return response
 
 

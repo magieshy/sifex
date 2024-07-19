@@ -155,7 +155,7 @@ class Invoice(models.Model):
     due_date = models.DateField(null=True, blank=True)
     total_amount_tzs = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     total_amount_usd = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
-    status = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, default='unpaid')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_invoices')
 
     def __str__(self):

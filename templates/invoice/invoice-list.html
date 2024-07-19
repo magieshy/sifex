@@ -1,69 +1,62 @@
-{% extends 'system/app/index.html' %}{% load bulma_tags %}
+{% extends 'system/app/index.html' %}
+{% load bulma_tags %}
 {% block content %}
 {% block title %}invoices{% endblock %}
 {% include 'system/partials/_messages.html' %}
 <form action="{% url 'invoice-list' %}" method="post">{% csrf_token %}
     <div class="card">
         <header class="card-header">
-           
         </header>
         <div class="card-content">
             <div class="content table-responsive">
-
                 <table class="table datanew is-fullwidth is-bordered is-hoverable is-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>INVOICE</th>
+                            <th>TRACKING NUMBER</th>
+                            <th>ORIGIN</th>
+                            <th>CUSTOMER</th>
+                            <th>DATE</th>
+                            <th>DUE DATE</th>
+                            <th>AMOUNT IN USD</th>
+                            <th>AMOUNT IN TZS</th>
+                            <th>STATUS</th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>INVOICE</th>
-                                <th>TRACKING NUMBER</th>
-                                <th>ORIGIN</th>
-                                <th>CUSTOMER</th>
-                                <th>DATE</th>
-                                <th>DUE DATE</th>
-                                <th>AMOUNT IN USD</th>
-                                <th>AMOUNT IN TZS</th>
-                                <th>STATUS</th>
-                                <th></th>
-                                <th></th>
-                                <!-- <th>DOWNLOAD</th> -->
-
-                            </tr>
-                        </thead>
                         {% for invoice in invoices %}
                         <tr>
-                            <td><input class="checkbox" type="checkbox" value="{{invoice.id}}" name="invoice_id" size="1" />
-                            </td>
-                            <td width="1%">#{{invoice.id}}</td>
-                            <td width="9%">{{invoice.awb.awb}}</td>
-                            <td width="9%">{{invoice.origin}}</td>
-                            <td width="9%">{{invoice.customer}}</td>
-                            <td> {{invoice.date}}</td>
-                            <td> {{invoice.due_date}} </td>
-                            <td width="1%">{{invoice.total_amount_usd}}</td>
-                            <td>{{invoice.total_amount_tzs}}</td>
+                            <td><input class="checkbox" type="checkbox" value="{{ invoice.id }}" name="invoice_id" size="1" /></td>
+                            <td width="1%">#{{ invoice.id }}</td>
+                            <td width="9%">{{ invoice.awb.awb }}</td>
+                            <td width="9%">{{ invoice.origin }}</td>
+                            <td width="9%">{{ invoice.customer }}</td>
+                            <td>{{ invoice.date }}</td>
+                            <td>{{ invoice.due_date }}</td>
+                            <td width="1%">{{ invoice.total_amount_usd }}</td>
+                            <td>{{ invoice.total_amount_tzs }}</td>
                             <td class="level-right">
-                                {% if invoice.get_status %}
+                                {% if invoice.status == 'paid' %}
                                 <a class="button is-small is-success" href="#">Paid</a>
+                                {% elif invoice.status == 'credited' %}
+                                <a class="button is-small is-primary" href="#">Credited</a>
                                 {% else %}
                                 <a class="button is-small is-warning" href="#">Not Paid</a>
                                 {% endif %}
                             </td>
-                            <!-- <td width="1%"><a href="{% url 'invoice-detail' id=invoice.id %}">
-                                <div class="button is-small is-info">View</div>
-                            </a></td> -->
-                            <td width="1%"><a href="{% url 'delete-invoice' id=invoice.id %}">
-                                <div class="button is-small is-info">delete</div>
-                            </a></td>
-                            <td width="1%"><a class="button is-small is-info" href="{% url 'invoice_pdf' invoice.id %}">Download</a></td>
+                            <td width="1%"><a href="{% url 'delete-invoice' id=invoice.id %}"><div class="button is-small is-info">Delete</div></a></td>
+                            <td width="1%"><a class="button is-small is-info" target="_blank" href="{% url 'invoice_pdf' invoice.id %}">Download</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-
             </div>
         </div>
-    </div><br /><br /><br />
+    </div>
+    <br /><br /><br />
     <div class="card has-background-white-ter">
         <header class="card-header">
             <p class="card-header-title">
@@ -71,22 +64,19 @@
             </p>
         </header>
         <div class="card-content">
-            <div class="select is-rounded">
-                <select id="status" name="status">
-                    <option value="1">Paid</option>
-                    <option value="0">Not Paid</option>
+            <div class="form-group is-rounded">
+                <select name="status">
+                    <option value="paid">Paid</option>
+                    <option value="credited">Credited</option>
                 </select>
             </div>
             <br>
-          
         </div>
         <div class="container">
             <div class="row bt-20">
-                <input class="button btn btn-secondary  is-info is-rounded" type="submit" class="btn" value="Mark Payment" name="mybtn">
+                <input class="button btn btn-secondary is-info is-rounded" type="submit" value="Mark Payment" name="mybtn">
             </div>
         </div>
-       
     </div>
 </form>
-
 {% endblock content %}
