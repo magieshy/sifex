@@ -1114,6 +1114,12 @@ def generate_invoice_pdf(request, invoice_id):
     invoice = Invoice.objects.get(id=invoice_id)
     lineitems = LineItem.objects.filter(customer=invoice)
 
+
+    def shorten_text(text, max_length):
+        if len(text) > max_length:
+            return text[:max_length-3] + '...'
+        return text
+
     # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
@@ -1121,9 +1127,9 @@ def generate_invoice_pdf(request, invoice_id):
     # Draw the logo and company info
     logo_path = os.path.join(settings.STATIC_ROOT, 'assets/img/sifex/logo.png')
     if os.path.exists(logo_path):
-        p.drawImage(logo_path, 40, 750, width=140, height=50, mask='auto')
+        p.drawImage(logo_path, 40, 720, width=140, height=50, mask='auto')
     else:
-        p.drawString(40, 750, "Logo not found")
+        p.drawString(40, 720, "Logo not found")
 
     p.setFont("Helvetica-Bold", 12)
     p.drawString(200, 750, "SIFEX COURIER COMPANY LIMITED")
@@ -1138,17 +1144,17 @@ def generate_invoice_pdf(request, invoice_id):
     p.setFont("Helvetica-Bold", 16)
     if invoice.status == 'paid':
         p.setFillColorRGB(0, 1, 0)  # Green color for PAID
-        p.translate(500, 730)  # Move to position
+        p.translate(500, 700)  # Move to position
         p.rotate(45)  # Rotate
         p.drawString(0, 0, "PAID")
     elif invoice.status == 'credited':
         p.setFillColorRGB(0, 0, 1)  # Blue color for CREDITED
-        p.translate(500, 730)  # Move to position
+        p.translate(500, 700)  # Move to position
         p.rotate(45)  # Rotate
         p.drawString(0, 0, "CREDITED")
     else:
         p.setFillColorRGB(1, 0, 0)  # Red color for UNPAID
-        p.translate(500, 730)  # Move to position
+        p.translate(500, 700)  # Move to position
         p.rotate(45)  # Rotate
         p.drawString(0, 0, "UNPAID")
     p.restoreState()
@@ -1181,7 +1187,7 @@ def generate_invoice_pdf(request, invoice_id):
             str(idx),
             item.service,
             f"${item.rate}",
-            item.tracking_key,
+            shorten_text(invoice.origin or '', 5),
             str(item.quantity),
             str(item.chargable_weight),
             f"Tzs {item.amount_tz}",
@@ -1207,7 +1213,7 @@ def generate_invoice_pdf(request, invoice_id):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
     ]))
     table.wrapOn(p, 800, 600)
-    table.drawOn(p, 40, 350)
+    table.drawOn(p, 30, 350)
 
     # Add totals
     p.setFont("Helvetica-Bold", 12)
