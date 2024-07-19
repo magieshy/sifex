@@ -22,7 +22,6 @@
 {% block content %}
 <div class="page-header">
     <div class="page-title">
-
     </div>
     <div class="page-btn">
         {% if request.user.acceptance %}
@@ -51,10 +50,10 @@
     <div class="wordset">'
     <ul>
     <li>
-    <a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf"><img src="{% static 'system/assets/img/icons/pdf.svg' %}" alt="img"></a>
+    <a href="{% url 'generate_pdf' %}" data-bs-toggle="tooltip" data-bs-placement="top" title="pdf"><img src="{% static 'system/assets/img/icons/pdf.svg' %}" alt="img"></a>
     </li>
     <li>
-    <a data-bs-toggle="tooltip" data-bs-placement="top" title="excel"><img src="{% static 'system/assets/img/icons/excel.svg' %}" alt="img"></a>
+    <a href="{% url 'generate_spreadsheet' %}" data-bs-toggle="tooltip" data-bs-placement="top" title="excel"><img src="{% static 'system/assets/img/icons/excel.svg' %}" alt="img"></a>
     </li>
     <li>
     <a data-bs-toggle="tooltip" data-bs-placement="top" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>

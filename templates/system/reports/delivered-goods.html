@@ -33,7 +33,7 @@
     </div>
     
     
-      <form action="{% url 'undelivered_report' %}" method="post">
+      <form action="{% url 'delivered_report' %}" method="post">
         {% csrf_token %}
         <div class="row">
             <div class="col-md-6 col-sm-6 col-6">
@@ -51,15 +51,10 @@
 
         <div class="row">
             <div class="col-md-12 col-sm-12 col-12">
-                
                 <button type="submit" class="btn btn-primary btn-block">Report</button>
-                
             </div>
         </div>
       </form>
-    
-    
-  
     </div>
 </div>
 {% endblock %}

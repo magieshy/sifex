@@ -83,11 +83,11 @@
         <li class="submenu">
             <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> REPORTS</span> <span class="menu-arrow"></span></a>
             <ul>
-                <li><a href="{% url 'delivered-goods' %}"><span>List Of Delivered Goods</span></a></li>
-                <li><a href="{% url 'undelivered-goods' %}"><span>List Of Undelivered Goods</span></a></li>
-                <li><a href="{% url 'paid-goods' %}"><span>List Of Paid Goods</span></a></li>
-                
-                <li class=""><a href="{% url 'unpaid-goods' %}"><span>List Of Unpaid Goods</span> </a></li>
+                <li><a href="{% url 'delivered_report' %}"><span>List Of Delivered Goods</span></a></li>
+                <li><a href="{% url 'undelivered_report' %}"><span>List Of Undelivered Goods</span></a></li>
+                <li><a href="{% url 'paid-goods' %}"><span>List Of Paid Invoices</span></a></li>
+                <li><a href="{% url 'credited-goods' %}"><span>List Of Credited Invoices</span></a></li>
+                <li class=""><a href="{% url 'unpaid-goods' %}"><span>List Of Unpaid Invoices</span> </a></li>
             </ul>
         </li>
         {% endif %}

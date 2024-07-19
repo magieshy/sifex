@@ -1,10 +1,10 @@
 {% extends 'system/app/index.html' %}
 {% load static %}
 {% load widget_tweaks %}
-{% block title %}Customers list{% endblock %}
+{% block title %}invoices list{% endblock %}
 
-{% block page %}Customers list{% endblock page %}
-{% block slogan %}list of Customers{% endblock slogan %} 
+{% block page %}invoices list{% endblock page %}
+{% block slogan %}list of unpaid invoices{% endblock slogan %} 
 
 {% block style %}
     <style>
@@ -27,79 +27,53 @@
 </div>
 
 <div class="card">
-    <div class="card-body">
-    <div class="table-top">
-    <div class="search-set">
-        {% include 'system/partials/_messages.html' %}
-    </div>
-    <div class="wordset">'
-    <ul>
-    <li>
-    <a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf"><img src="{% static 'system/assets/img/icons/pdf.svg' %}" alt="img"></a>
-    </li>
-    <li>
-    <a data-bs-toggle="tooltip" data-bs-placement="top" title="excel"><img src="{% static 'system/assets/img/icons/excel.svg' %}" alt="img"></a>
-    </li>
-    <li>
-    <a data-bs-toggle="tooltip" data-bs-placement="top" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>
-    </li>
-    </ul>
-    </div>
-    </div>
-    
-    <div class="card mb-0" id="filter_inputs">
-    <div class="card-body pb-0">
-    </div>
-    </div>
-    
-    <div class="table-responsive">
-        <table class="table  datanew">
-        <thead>
-        <tr>
-        <th>
-        <label class="checkboxs">
-        <input type="checkbox" id="select-all">
-        <span class="checkmarks"></span>
-        </label>
-        </th>
-        <th>RECEIVER NAME</th>
-        <th>AWB</th>
-        <th>Order number </th>
-        <th>AWB PCS</th>
-        <th>AWB KG</th>
-        <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for pc in pcs %}
-        <tr>
-        <td>
-        <label class="checkboxs">
-        <input type="checkbox" name="awb_id[]" value="{{pc.id}}" id="checkbox" class="loaded_status">
-        <span class="checkmarks"></span>
-        </label>
-        </td>
-        <td class="productimgname">
-            <a href="{% url 'parcel_view' pc.id %}">{{pc.receiver_name}}</a>
-        </td>
-        <td>{{pc.awb}}</td>
-        <td>{{pc.order_number}}</td>
-        <td>{{pc.awb_pcs}}</td>
-        <td>{{pc.awb_kg}}</td>
-        <td>
-        <a class="me-3" href="{% url 'parcel_view' pc.id %}">
-        <img src="{% static 'system/assets/img/icons/edit.svg' %}" alt="img">
-        </a>
-        <a href="{% url 'export-master-awb-pdf-label' pc.id %}" data-bs-toggle="tooltip" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>
-        <a class="confirm" href="{% url 'delete-awb' pc.id %}">
-        <img src="{% static 'system/assets/img/icons/delete.svg' %}" alt="img">
-        </a>
-    
-        </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-        </table>
+    <header class="card-header">
+    </header>
+    <div class="card-content">
+        <div class="content table-responsive">
+            <table class="table datanew is-fullwidth is-bordered is-hoverable is-striped">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>INVOICE</th>
+                        <th>TRACKING NUMBER</th>
+                        <th>ORIGIN</th>
+                        <th>CUSTOMER</th>
+                        <th>DATE</th>
+                        <th>DUE DATE</th>
+                        <th>AMOUNT IN USD</th>
+                        <th>AMOUNT IN TZS</th>
+                        <th>STATUS</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td><input class="checkbox" type="checkbox" value="{{ invoice.id }}" name="invoice_id" size="1" /></td>
+                        <td width="1%">#{{ invoice.id }}</td>
+                        <td width="9%">{{ invoice.awb.awb }}</td>
+                        <td width="9%">{{ invoice.origin }}</td>
+                        <td width="9%">{{ invoice.customer }}</td>
+                        <td>{{ invoice.date }}</td>
+                        <td>{{ invoice.due_date }}</td>
+                        <td width="1%">{{ invoice.total_amount_usd }}</td>
+                        <td>{{ invoice.total_amount_tzs }}</td>
+                        <td class="level-right">
+                            {% if invoice.status == 'paid' %}
+                            <a class="button is-small is-success" href="#">Paid</a>
+                            {% elif invoice.status == 'credited' %}
+                            <a class="button is-small is-primary" href="#">Credited</a>
+                            {% else %}
+                            <a class="button is-small is-warning" href="#">Not Paid</a>
+                            {% endif %}
+                        </td>
+                        <!-- <td width="1%"><a href="{% url 'delete-invoice' id=invoice.id %}"><div class="button is-small is-info">Delete</div></a></td> -->
+                        <td width="1%"><a class="button is-small is-info" target="_blank" href="{% url 'invoice_pdf' invoice.id %}">Download</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>

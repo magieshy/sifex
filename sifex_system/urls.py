@@ -10,6 +10,9 @@ urlpatterns = [
     path('print_label/<int:pk>/', print_label, name='print_label'),
     path('invoice/pdf/<int:invoice_id>/', generate_invoice_pdf, name='invoice_pdf'),
 
+    path('generate_pdf/', generate_pdf, name='generate_pdf'),
+    path('generate_spreadsheet/', generate_spreadsheet, name='generate_spreadsheet'),
+
     # search
     path('search/', search_parcel, name='search_parcel'),
     path('search/<int:pk>/', search_found, name='search_found'),
@@ -69,7 +72,6 @@ urlpatterns = [
     path('invoices/', InvoiceListView.as_view(), name="invoice-list"),
     path('create/<int:pk>/', createInvoice, name="invoice-create"),
     path('invoice-detail/<id>', view_PDF, name='invoice-detail'),
-    path('invoice-download/<id>', generate_PDF, name='invoice-download'),
     path('generate-invoice/', invoice_generation, name="generate-invoice"),
 
     #CUSTOMER APP
@@ -81,11 +83,13 @@ urlpatterns = [
     path('undeliverd-goods/', list_of_undelivered_awb, name="undelivered-goods"),
     path('paid-goods/', list_of_paid_awb, name="paid-goods"),
     path('unpaid-goods/', list_of_unpaid_awb, name="unpaid-goods"),
+    path('credited-goods/', list_of_credited_awb, name="credited-goods"),
 
     path('delivered_report', delivered_report, name="delivered_report"),
-    path('undelivered_report', undelivered_report, name="undelivered_report"),
+    path('undelivered_report/', undelivered_report, name="undelivered_report"),
     path('paid_report', paid_report, name="paid_report"),
     path('unpaid_report', unpaid_report, name="unpaid_report"),
+    path('credited_report', credited_report, name="credited_report"),
 
 
     # ATTENDANCE APP

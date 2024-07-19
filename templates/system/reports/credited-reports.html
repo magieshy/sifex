@@ -4,7 +4,7 @@
 {% block title %}invoices list{% endblock %}
 
 {% block page %}invoices list{% endblock page %}
-{% block slogan %}list of unpaid invoices{% endblock slogan %} 
+{% block slogan %}list of credited invoices{% endblock slogan %} 
 
 {% block style %}
     <style>
@@ -20,11 +20,6 @@
     </style>
 {% endblock %}
 {% block content %}
-<div class="page-header">
-    <div class="page-title">
-
-    </div>
-</div>
 
 <div class="card">
     <header class="card-header">
@@ -68,7 +63,6 @@
                             <a class="button is-small is-warning" href="#">Not Paid</a>
                             {% endif %}
                         </td>
-                        <!-- <td width="1%"><a href="{% url 'delete-invoice' id=invoice.id %}"><div class="button is-small is-info">Delete</div></a></td> -->
                         <td width="1%"><a class="button is-small is-info" target="_blank" href="{% url 'invoice_pdf' invoice.id %}">Download</a></td>
                     </tr>
                     {% endfor %}

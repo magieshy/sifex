@@ -36,7 +36,7 @@ from reportlab.graphics.barcode import code128
 from reportlab.graphics import renderPDF
 from reportlab.graphics.shapes import Drawing
 from io import BytesIO
-
+import xlsxwriter
 # another approch
 
 from reportlab.graphics import renderPDF
@@ -1005,13 +1005,76 @@ def view_PDF(request, id=None):
     return render(request, 'invoice/pdf_template.html', context)
 
 
-def generate_PDF(request, id):
-    # Use False instead of output path to save pdf to a variable
-    pdf = pdfkit.from_url(request.build_absolute_uri(reverse('invoice-detail', args=[id])), False)
-    response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="invoice.pdf"'
+@login_required
+def generate_pdf(request):
+    pcs = Masterawb.objects.all()
 
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="manifested_awb.pdf"'
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(100, 750, "Manifested AWB")
+
+    data = [["RECEIVER NAME", "AWB", "Order number", "AWB PCS", "AWB KG"]]
+    for pc in pcs:
+        data.append([pc.receiver_name, pc.awb, pc.order_number, pc.awb_pcs, pc.awb_kg])
+
+    table = Table(data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    table.wrapOn(p, 800, 600)
+    table.drawOn(p, 50, 600)
+
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+    return HttpResponse(buffer, content_type='application/pdf')
+
+
+
+@login_required
+def generate_spreadsheet(request):
+    pcs = Masterawb.objects.all()
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="manifested_awb.xlsx"'
+
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet()
+
+    headers = ["RECEIVER NAME", "AWB", "Order number", "AWB PCS", "AWB KG"]
+    for col_num, header in enumerate(headers):
+        worksheet.write(0, col_num, header)
+
+    for row_num, pc in enumerate(pcs, start=1):
+        worksheet.write(row_num, 0, pc.receiver_name)
+        worksheet.write(row_num, 1, pc.awb)
+        worksheet.write(row_num, 2, pc.order_number)
+        worksheet.write(row_num, 3, pc.awb_pcs)
+        worksheet.write(row_num, 4, pc.awb_kg)
+
+    workbook.close()
+    output.seek(0)
+
+    response.write(output.read())
     return response
+
+
+
+
+
 
 def change_status(request):
     return redirect('invoice-list')
@@ -1271,6 +1334,10 @@ def list_of_paid_awb(request):
 def list_of_unpaid_awb(request):
     return render(request, 'system/reports/unpaid-goods.html', {})
 
+
+def list_of_credited_awb(request):
+    return render(request, 'system/reports/credited-goods.html', {})
+
 @login_required
 def add_customer(request):
     context = {}
@@ -1297,35 +1364,49 @@ def customer_list(request):
     return render(request, 'system/customer/index.html', {'customers': customers})
 
 def delivered_report(request):
+    pcs = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, POD=True)
+        pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=True)
     context = {'pcs': pcs}
     return render(request, 'system/reports/dlv-reports.html', context)
 
 def undelivered_report(request):
+    pcs = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=True)
+        print()
+        pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=False)
     context = {'pcs': pcs}
     return render(request, 'system/reports/undlv-reports.html', context)
 
 def paid_report(request):
+    invoices = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=True)
-    context = {'pcs': pcs}
+        invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='paid')
+    context = {'invoices': invoices}
     return render(request, 'system/reports/paid-reports.html', context)
 
-def unpaid_report(request):
+def credited_report(request):
+    invoices = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=True)
-    context = {'pcs': pcs}
+        invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='credited')
+    context = {'invoices': invoices}
+    return render(request, 'system/reports/credited-reports.html', context)
+
+def unpaid_report(request):
+    invoices = []
+    if request.method == "POST":
+        date_from = request.POST.get('date_from')
+        date_to = request.POST.get('date_to')
+        invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='unpaid')
+    context = {'invoices': invoices}
     return render(request, 'system/reports/unpaid-reports.html', context)
 
 def check_staff(request):
