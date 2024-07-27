@@ -55,7 +55,8 @@
         <li class="submenu">
             <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> WHAREHOUSE</span> <span class="menu-arrow"></span></a>
             <ul>
-                <li class=""><a href="{% url 'accept_delivered_console' %}"><span>delivery</span> </a></li>
+                <li class=""><a href="{% url 'location_search' %}"><span>Location</span> </a></li>
+                <li class=""><a href="{% url 'accept_delivered_console' %}"><span>Delivery</span> </a></li>
                 <li class=""><a href="{% url 'accept_pod_console' %}"><span>POD</span> </a></li>
             </ul>
         </li>
@@ -88,6 +89,7 @@
                 <li><a href="{% url 'paid-goods' %}"><span>List Of Paid Invoices</span></a></li>
                 <li><a href="{% url 'credited-goods' %}"><span>List Of Credited Invoices</span></a></li>
                 <li class=""><a href="{% url 'unpaid-goods' %}"><span>List Of Unpaid Invoices</span> </a></li>
+                <li class=""><a href="{% url 'generate_sales_report' %}"><span>Sales Report</span> </a></li>
             </ul>
         </li>
         {% endif %}
@@ -146,6 +148,10 @@
             <ul>
                 <li><a href="{% url 'blogs' %}"><span>Blogs</span></a></li>
                 <li><a href="{% url 'quotes' %}"><span>Quotes</span></a></li>
+                <li><a href="{% url 'quotes' %}"><span>Abouts</span></a></li>
+                <li><a href="{% url 'quotes' %}"><span>Services</span></a></li>
+                <li><a href="{% url 'quotes' %}"><span>Carousels</span></a></li>
+                <li><a href="{% url 'quotes' %}"><span>Teams</span></a></li>
             </ul>
         </li>
     </ul>
