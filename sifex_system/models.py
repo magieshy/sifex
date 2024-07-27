@@ -88,6 +88,7 @@ class Masterawb(models.Model):
     under_clearance = models.BooleanField(default=False)
     released = models.BooleanField(default=False)
     bill = models.BooleanField(default=False)
+    invoice_generated = models.BooleanField(default=False)
     billed = models.BooleanField(default=False)
     delivered = models.BooleanField(default=False)
     POD = models.BooleanField(default=False)
@@ -96,6 +97,15 @@ class Masterawb(models.Model):
 
     def __str__(self):
         return f'{self.receiver_name} {self.awb}'
+
+
+
+class AwbLocation(models.Model):
+    awb = models.ForeignKey(Masterawb, on_delete=models.CASCADE, null=True, blank=True, related_name="awb_locations")
+    rack = models.CharField(max_length=255, null=True, blank=True)
+    bay = models.CharField(max_length=255, null=True, blank=True)
+    pcs = models.CharField(max_length=255, null=True, blank=True)
+
 
 
 class Slaveawb(models.Model):
@@ -156,6 +166,7 @@ class Invoice(models.Model):
     total_amount_tzs = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     total_amount_usd = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     status = models.CharField(max_length=20, default='unpaid')
+    invoice_detail = models.CharField(max_length=20, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_invoices')
 
     def __str__(self):
@@ -166,7 +177,7 @@ class Invoice(models.Model):
 
 
 class LineItem(models.Model):
-    customer = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="invoces_line")
     tracking_key = models.CharField(max_length=255, blank=True)
     service = models.TextField(null=True)
     description = models.TextField()
