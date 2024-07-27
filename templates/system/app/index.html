@@ -120,6 +120,27 @@ const csrftoken = getCookie('csrftoken');
 </div>
 
 
+<!-- Modal -->
+<div id="awbModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>AWB Details</h2>
+        <table id="modalTable" class="table">
+            <thead>
+                <tr>
+                    <th>Rack</th>
+                    <th>Bay</th>
+                    <th>PCS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be injected here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
 <script src="{% static 'system/assets/js/jquery-3.6.0.min.js' %}"></script>
 
 <script src="{% static 'system/assets/js/feather.min.js' %}"></script>
