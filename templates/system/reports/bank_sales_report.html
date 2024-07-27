@@ -1,0 +1,62 @@
+{% extends 'system/app/index.html' %}
+{% block title %}{{ payment_method|capfirst }} Sales Report{% endblock %}
+
+{% block page %}{{ payment_method|capfirst }} Sales Report{% endblock page %}
+{% block slogan %}{{ payment_method|capfirst }} Sales Report{% endblock slogan %}
+
+{% block content %}
+<div class="card ">
+    <div class="card-body row">
+        <div class="col-md-4 col-lg-4 col-sm-12">
+            <h1>{{ payment_method|capfirst }} Sales Report</h1>
+            <p>Date Range: {{ date_from }} to {{ date_to }}</p>
+        </div>
+        <div class="col-md-8 col-lg-8 col-sm-12">
+            <div class="row">
+                <div class="">
+                    <h3>Total Sales (TZS): {{ total_sales_tzs }}</h3>
+                </div>
+                <div class="">
+                    <h3>Total Sales (USD): {{ total_sales_usd }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if error %}
+            <p>{{ error }}</p>
+        {% else %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Invoice ID</th>
+                        <th>Customer</th>
+                        <th>Total Amount (TZS)</th>
+                        <th>Total Amount (USD)</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td>{{ invoice.id }}</td>
+                        <td>{{ invoice.customer }}</td>
+                        <td>{{ invoice.total_amount_tzs }}</td>
+                        <td>{{ invoice.total_amount_usd }}</td>
+                        <td>{{ invoice.date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

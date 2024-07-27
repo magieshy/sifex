@@ -1,10 +1,10 @@
 {% extends 'system/app/index.html' %}
 {% load static %}
 {% load widget_tweaks %}
-{% block title %}Generate Report{% endblock %}
+{% block title %}Delivered Report{% endblock %}
 
-{% block page %}Generate Report{% endblock page %}
-{% block slogan %}Generate Report{% endblock slogan %}
+{% block page %}Delivered Report{% endblock page %}
+{% block slogan %}Delivered Report{% endblock slogan %}
 
 {% block style %}
     <style>
@@ -33,20 +33,22 @@
         <form action="{% url 'delivered_report' %}" method="post">
             {% csrf_token %}
             <div class="row">
-                <div class="col-md-6 col-sm-6 col-6">
+                <div class="col-md-4 col-sm-4 col-4">
                     <div class="form-group">
-                        <input required type="date" name="date_from" id="" class="form-control">
+                        <label for="">Date From</label>
+                        <input required type="date" placeholder="Choose Date" name="date_from" id="id_date" class="form-control">
                     </div>
                 </div>
-                <div class="col-md-6 col-sm-6 col-6">
+                <div class="col-md-4 col-sm-4 col-4">
                     <div class="form-group">
-                        <input required type="date" name="date_to" id="" class="form-control">
+                        <label for="">Date To</label>
+                        <input required type="date" placeholder="Choose Date" name="date_to" id="id_date" class="form-control">
                     </div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-12">
-                    <button type="submit" class="btn btn-primary btn-block">Report</button>
+                    <button type="submit" class="btn btn-primary btn-block">Get Report</button>
                 </div>
             </div>
         </form>
@@ -105,6 +107,30 @@
 {% endif %}
 {% endblock %}
 {% block script %}
+<!-- Include Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Include Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#id_date", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+            flatpickr("#id_due_date", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+            flatpickr("#id_time", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                allowInput: true
+            });
+        });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Add event listeners or any other initialization code here

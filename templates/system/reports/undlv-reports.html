@@ -1,10 +1,10 @@
 {% extends 'system/app/index.html' %}
 {% load static %}
 {% load widget_tweaks %}
-{% block title %}Generate Report{% endblock %}
+{% block title %}Undeliverd Item Report{% endblock %}
 
-{% block page %}Generate Report{% endblock page %}
-{% block slogan %}Generate Report{% endblock slogan %}
+{% block page %}Undeliverd Item Report{% endblock page %}
+{% block slogan %}Undeliverd Item Report{% endblock slogan %}
 
 {% block style %}
     <style>
@@ -33,14 +33,16 @@
         <form action="{% url 'undelivered_report' %}" method="post">
             {% csrf_token %}
             <div class="row">
-                <div class="col-md-6 col-sm-6 col-6">
+                <div class="col-md-4 col-sm-4 col-4">
                     <div class="form-group">
-                        <input required type="date" name="date_from" id="" class="form-control">
+                        <label for="">Date From</label>
+                        <input required type="date" placeholder="Choose Date" name="date_from" id="id_date" class="form-control">
                     </div>
                 </div>
-                <div class="col-md-6 col-sm-6 col-6">
+                <div class="col-md-4 col-sm-4 col-4">
                     <div class="form-group">
-                        <input required type="date" name="date_to" id="" class="form-control">
+                        <label for="">Date To</label>
+                        <input required type="date" placeholder="Choose Date" name="date_to" id="id_date" class="form-control">
                     </div>
                 </div>
             </div>
@@ -92,7 +94,7 @@
                     <a class="me-3" href="{% url 'parcel_view' pc.id %}">
                         <img src="{% static 'system/assets/img/icons/edit.svg' %}" alt="img">
                     </a>
-                    <a href="{% url 'export-master-awb-pdf-label' pc.id %}" data-bs-toggle="tooltip" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>
+
                     <a class="confirm" href="{% url 'delete-awb' pc.id %}">
                         <img src="{% static 'system/assets/img/icons/delete.svg' %}" alt="img">
                     </a>
@@ -105,6 +107,30 @@
 {% endif %}
 {% endblock %}
 {% block script %}
+<!-- Include Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Include Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#id_date", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+            flatpickr("#id_due_date", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+            flatpickr("#id_time", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                allowInput: true
+            });
+        });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Add event listeners or any other initialization code here
