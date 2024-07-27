@@ -5,10 +5,19 @@ from accounts.views import *
 
 urlpatterns = [
     path('', console, name="console"),
+    path('location/search/', location_view, name="location_search"),
+    path('location/save/', save_location_info, name="save_location_info"),
+    path('location/search/process/', location_search_result, name='location_search_process'),
+    path('location/<int:pk>/', location_search_result_found, name='location_search_result_found'),
+    path('location_search_process/', location_search_process, name='location_search_process'),
+
+
+    path('awb-details/<int:awb_id>/', awb_details, name='awb_details'),
 
     # printing
     path('print_label/<int:pk>/', print_label, name='print_label'),
     path('invoice/pdf/<int:invoice_id>/', generate_invoice_pdf, name='invoice_pdf'),
+    path('invoice_detail/<int:invoice_id>/', invoice_detail, name='invoice_detail'),
 
     path('generate_pdf/', generate_pdf, name='generate_pdf'),
     path('generate_spreadsheet/', generate_spreadsheet, name='generate_spreadsheet'),
@@ -65,6 +74,14 @@ urlpatterns = [
     path('export/pdf/<int:pk>/', export_masterawb_pdf_label, name="export-master-awb-pdf-label"),
     path('delete_awb/<int:id>/', delete_awb, name="delete-awb"),
     path('delete_invoice/<int:id>/', delete_invoice, name="delete-invoice"),
+
+    # sales report
+
+
+    path('generate_sales_report/', generate_sales_report, name='generate_sales_report'),
+    path('cash_sales_report/<str:date_from>/<str:date_to>/', cash_sales_report, name='cash_sales_report'),
+    path('bank_sales_report/<str:date_from>/<str:date_to>/', bank_sales_report, name='bank_sales_report'),
+    path('mobile_sales_report/<str:date_from>/<str:date_to>/', mobile_sales_report, name='mobile_sales_report'),
 
 
     # INVOICE APP
