@@ -16,10 +16,11 @@ from sifex_system.forms import PasswordChangingForm
 from sifex_system.models import *
 from sifex_system.forms import *
 from django.db.models import Sum
+from django.utils.dateparse import parse_date
 import datetime
 from django.utils.timezone import now as timezone_now
 from core.models import *
-from .models import Invoice, LineItem, Customer, Attendance, Staff
+from .models import Invoice, LineItem, Customer, Attendance, Staff, AwbLocation
 import pdfkit
 
 
@@ -131,11 +132,12 @@ def accept_release_console(request):
 
 @login_required
 def accept_delivered_console(request):
-    pcs = Masterawb.objects.filter(billed=True).order_by('-date_received')
+    pcs = Masterawb.objects.filter(billed=True).order_by('-date_received').prefetch_related('awb_locations')
     context = {
         'pcs': pcs,
     }
     return render(request, 'system/parcels/importer/delivered.html', context)
+
 
 @login_required
 def accept_pod_console(request):
@@ -852,6 +854,82 @@ def on_edit_add_parcel_view(request, pk):
     return render(request, 'system/parcels/importer/add.html', ctx)
 
 
+def location_view(request):
+    return render(request, 'location/index.html')
+
+
+@login_required
+def location_search_result(request):
+    query = request.GET.get('query')
+    if query:
+        parcels = Masterawb.objects.filter(
+            Q(awb__icontains=query) | Q(order_number__icontains=query)
+        )
+        if parcels.exists():
+            return redirect('location_search_result_found', pk=parcels.first().id)
+        else:
+            return render(request, 'location/result.html', {'error': 'No parcel found.'})
+    else:
+        return render(request, 'location/result.html', {'error': 'Please enter a search term.'})
+
+@login_required
+def save_location_info(request):
+    if request.method == "POST":
+        awb_id = request.POST.get("awb_id")
+        rack = request.POST.get("rack")
+        bay = request.POST.get("bay")
+        pcs = request.POST.get("pcs")
+
+        try:
+            awb = Masterawb.objects.get(id=awb_id)
+            AwbLocation.objects.create(
+                awb=awb,
+                rack=rack,
+                bay=bay,
+                pcs=pcs
+            )
+        except Masterawb.DoesNotExist:
+            return redirect('location_search')
+
+        return redirect('location_search_result_found', pk=awb.id)
+    else:
+        return redirect('location_search')
+
+@login_required
+def location_search_process(request):
+    query = request.GET.get('query')
+    if query:
+        try:
+            master_awb = Masterawb.objects.get(awb=query)
+            return redirect('location_search_result_found', pk=master_awb.id)
+        except Masterawb.DoesNotExist:
+            return render(request, 'location/result.html', {'error': 'No parcel found.'})
+    else:
+        return render(request, 'location/result.html', {'error': 'Please enter a search term.'})
+
+@login_required
+def location_search_result_found(request, pk):
+    master_awb = get_object_or_404(Masterawb, id=pk)
+    locations = AwbLocation.objects.filter(awb=master_awb)
+
+    context = {
+        'master_awb': master_awb,
+        'locations': locations
+    }
+    return render(request, 'location/result.html', context)
+
+
+def invoice_detail(request, invoice_id):
+    try:
+        invoice = Invoice.objects.get(id=invoice_id)
+        line_items = invoice.invoces_line.all()
+        context = {
+            'invoice': invoice,
+            'line_items': line_items
+        }
+        return render(request, 'invoice/invoice_detail.html', context)
+    except Invoice.DoesNotExist:
+        return HttpResponseNotFound("Invoice not found")
 
 
 class InvoiceListView(View):
@@ -867,6 +945,7 @@ class InvoiceListView(View):
         invoice_ids = list(map(int, invoice_ids))
 
         update_status_for_invoices = request.POST['status']
+        update_detail_for_invoice = request.POST['invoice_detail']
         invoices = Invoice.objects.filter(id__in=invoice_ids)
 
         for invoice in invoices:
@@ -874,7 +953,8 @@ class InvoiceListView(View):
             print(f"Before Update: {awb.bill}, {awb.billed}")  # Debug statement
             if update_status_for_invoices == 'paid':
                 invoice.status = 'paid'
-                awb.bill = False
+                invoice.invoice_detail = update_detail_for_invoice
+                awb.invoice_generated = False
                 awb.billed = True
                 MasterStatus.objects.create(
                     master=awb,
@@ -887,8 +967,9 @@ class InvoiceListView(View):
                 )
             elif update_status_for_invoices == 'credited':
                 invoice.status = 'credited'
+                invoice.invoice_detail = update_detail_for_invoice
                 awb.billed = True
-                awb.bill = False
+                awb.invoice_generated = False
                 MasterStatus.objects.create(
                     master=awb,
                     user=request.user,
@@ -961,7 +1042,9 @@ def createInvoice(request, pk):
             invoice.total_amount_tzs = total_tz
             invoice.total_amount_usd = total_usd
             invoice.save()
-
+            awb.bill = False
+            awb.invoice_generated = True
+            awb.save()
             return redirect('invoice-list')
 
     context = {
@@ -1368,6 +1451,7 @@ def delivered_report(request):
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
+        print(date_from)
         pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=True)
     context = {'pcs': pcs}
     return render(request, 'system/reports/dlv-reports.html', context)
@@ -1614,3 +1698,75 @@ def search_found(request, pk):
         'slave_pcs': slave_pcs,
     }
     return render(request, 'system/parcels/search/search_found.html', context)
+
+
+
+
+
+
+
+# sales report
+@login_required
+def generate_sales_report(request):
+    if request.method == "POST":
+        date_from = request.POST.get('date_from')
+        date_to = request.POST.get('date_to')
+        invoice_detail = request.POST.get('invoice_detail')
+
+        if date_from and date_to and invoice_detail:
+            return redirect(f'{invoice_detail}_sales_report', date_from=date_from, date_to=date_to)
+    
+    return render(request, 'system/reports/generate_sales_report_form.html')
+
+def sales_report_view(request, date_from, date_to, payment_method):
+    date_from = parse_date(date_from)
+    date_to = parse_date(date_to)
+
+    filtered_invoices = Invoice.objects.filter(date__range=[date_from, date_to], invoice_detail=payment_method)
+    
+    total_sales_tzs = LineItem.objects.filter(customer__in=filtered_invoices).aggregate(total=Sum('amount_tz'))['total'] or 0
+    total_sales_usd = LineItem.objects.filter(customer__in=filtered_invoices).aggregate(total=Sum('amount_usd'))['total'] or 0
+
+    context = {
+        'invoices': filtered_invoices,
+        'total_sales_tzs': total_sales_tzs,
+        'total_sales_usd': total_sales_usd,
+        'date_from': date_from,
+        'date_to': date_to,
+        'payment_method': payment_method
+    }
+
+    return render(request, f'system/reports/{payment_method}_sales_report.html', context)
+
+def cash_sales_report(request, date_from, date_to):
+    return sales_report_view(request, date_from, date_to, 'cash')
+
+def bank_sales_report(request, date_from, date_to):
+    return sales_report_view(request, date_from, date_to, 'bank')
+
+def mobile_sales_report(request, date_from, date_to):
+    return sales_report_view(request, date_from, date_to, 'mobile')
+
+
+@login_required
+def awb_details(request, awb_id):
+    # Get the AWB object
+    awb = get_object_or_404(Masterawb, id=awb_id)
+    
+    # Fetch related locations
+    locations = awb.awb_locations.all()  # Use the related name 'awb_locations'
+    
+    # Prepare the data to return
+    locations_data = []
+    for location in locations:
+        locations_data.append({
+            'rack': location.rack,
+            'bay': location.bay,
+            'pcs': location.pcs
+        })
+    
+    # Return the data as JSON
+    return JsonResponse({'locations': locations_data})
+
+
+
