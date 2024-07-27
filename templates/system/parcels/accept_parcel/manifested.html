@@ -68,7 +68,7 @@
         <div class="col-md-12 col-lg-12 col-sm-12 d-flex justify-content-between">
             <div class="form-group">
                 <select name="status" id="id_status" class="form-control">
-                    <option value="departed" class="form-control">departed</option>
+                    <option value="departed" class="form-control">depart</option>
                 </select>
                 
             </div>
@@ -157,6 +157,31 @@
 </div>
 {% endblock %}
 {% block script %}
+
+<!-- Include Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Include Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#id_date", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+            flatpickr("#id_due_date", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+            flatpickr("#id_time", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                allowInput: true
+            });
+        });
+</script>
 <script>
     $(document).ready(function(){
     $('#departed_btn').click(function(){
