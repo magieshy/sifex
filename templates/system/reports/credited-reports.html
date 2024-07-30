@@ -1,31 +1,111 @@
 {% extends 'system/app/index.html' %}
 {% load static %}
 {% load widget_tweaks %}
-{% block title %}invoices list{% endblock %}
+{% block title %}Credited Invoices List{% endblock %}
 
-{% block page %}invoices list{% endblock page %}
-{% block slogan %}list of credited invoices{% endblock slogan %} 
+{% block page %}Credited Invoices List{% endblock page %}
+{% block slogan %}List of Credited Invoices{% endblock slogan %}
 
 {% block style %}
-    <style>
-        .hide-accept-form {
+<style>
+    .hide-accept-form, .hide-response-form, .hide-add-form {
+        display: none;
+    }
+
+    .logo-print {
+        display: none;
+    }
+
+    .print-title {
+        display: none;
+    }
+
+    @media print {
+        /* Hide the entire page except for the card */
+        body * {
+            visibility: hidden;
+        }
+        .card, .card * {
+            visibility: visible;
+        }
+        .card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .btn, .no-print, .form-group, .table-top, .form-container {
             display: none;
         }
-        .hide-response-form {
+
+        .logo-print, .print-title {
+            display: block !important;
+        }
+
+        .print-title {
+            text-align: left;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .logo-print {
+            width: 100px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Specific classes to hide title and URL */
+        .no-print-title, .no-print-url {
             display: none;
         }
-        .hide-add-form {
-            display: none;
+
+        /* Additional CSS to hide the default title and URL */
+        @page {
+            size: A4;
+            margin: 0; /* Remove the default margins */
         }
-    </style>
+        body {
+            margin: 0; /* Remove the body margin */
+        }
+        .card {
+            margin: 0; /* Remove the card margin */
+            box-shadow: none; /* Remove any shadow */
+            width: auto;
+        }
+
+        .table {
+            width: 100%;
+            table-layout: auto; /* Adjust to content */
+            font-size: 10px; /* Smaller font size */
+        }
+        .table th, .table td {
+            padding: 4px; /* Reduced padding */
+            word-wrap: break-word; /* Allow breaking long words */
+        }
+    }
+</style>
 {% endblock %}
 {% block content %}
+<div class="page-header">
+    <div class="page-title"></div>
+</div>
 
 <div class="card">
     <header class="card-header">
+        <div class="print-title">Credited Invoices List</div>
+        <div class="logo-print">
+            <img src="{% static 'home/assets/img/logo/loder.jpg' %}" alt="Logo">
+        </div>
     </header>
+   
+    {% if invoices %}
     <div class="card-content">
         <div class="content table-responsive">
+            <button onclick="window.print()" class="btn btn-primary mb-3">Print Report</button>
             <table class="table datanew is-fullwidth is-bordered is-hoverable is-striped">
                 <thead>
                     <tr>
@@ -46,15 +126,15 @@
                     {% for invoice in invoices %}
                     <tr>
                         <td><input class="checkbox" type="checkbox" value="{{ invoice.id }}" name="invoice_id" size="1" /></td>
-                        <td width="1%">#{{ invoice.id }}</td>
-                        <td width="9%">{{ invoice.awb.awb }}</td>
-                        <td width="9%">{{ invoice.origin }}</td>
-                        <td width="9%">{{ invoice.customer }}</td>
+                        <td>#{{ invoice.id }}</td>
+                        <td>{{ invoice.awb.awb }}</td>
+                        <td>{{ invoice.origin }}</td>
+                        <td>{{ invoice.customer }}</td>
                         <td>{{ invoice.date }}</td>
                         <td>{{ invoice.due_date }}</td>
-                        <td width="1%">{{ invoice.total_amount_usd }}</td>
+                        <td>{{ invoice.total_amount_usd }}</td>
                         <td>{{ invoice.total_amount_tzs }}</td>
-                        <td class="level-right">
+                        <td>
                             {% if invoice.status == 'paid' %}
                             <a class="button is-small is-success" href="#">Paid</a>
                             {% elif invoice.status == 'credited' %}
@@ -63,14 +143,70 @@
                             <a class="button is-small is-warning" href="#">Not Paid</a>
                             {% endif %}
                         </td>
-                        <td width="1%"><a class="button is-small is-info" target="_blank" href="{% url 'invoice_pdf' invoice.id %}">Download</a></td>
+                        <td><a class="button is-small is-info" target="_blank" href="{% url 'invoice_pdf' invoice.id %}">Download</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+    {% else %}
+    <div class="card-body form-container">
+        <div class="table-top">
+            {% include 'system/partials/_messages.html' %}
+        </div>
+
+        <form action="{% url 'credited_report' %}" method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-4 col-sm-4 col-4">
+                    <div class="form-group">
+                        <label for="">Date From</label>
+                        <input required type="date" placeholder="Choose Date" name="date_from" id="id_date_from" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-4 col-4">
+                    <div class="form-group">
+                        <label for="">Date To</label>
+                        <input required type="date" placeholder="Choose Date" name="date_to" id="id_date_to" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-12">
+                    <button type="submit" class="btn btn-primary btn-block">Get Report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="no-data found" style="display: flex; justify-content: center; align-items: center;">
+        <h4 class="text-center">No credited invoices found for the selected date range.</h4>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 {% block script %}
+<!-- Include Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Include Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+     document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#id_date_from", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+            flatpickr("#id_date_to", {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+        });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners or any other initialization code here
+    });
+</script>
 {% endblock %}

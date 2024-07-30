@@ -17,6 +17,53 @@
         .hide-add-form {
             display: none;
         }
+
+        .logo-print {
+            display: none;
+        }
+
+        @media print {
+            /* Hide the entire page except for the card */
+            body * {
+                visibility: hidden;
+            }
+            .card, .card * {
+                visibility: visible;
+            }
+            .card {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .btn, .no-print {
+                display: none;
+            }
+
+            .logo-print {
+                display: block !important;
+            }
+
+            /* Specific classes to hide title and URL */
+            .no-print-title, .no-print-url {
+                display: none;
+            }
+
+            /* Additional CSS to hide the default title and URL */
+            @page {
+                size: auto;
+                margin: 0; /* Remove the default margins */
+            }
+            @media print {
+                body {
+                    margin: 0; /* Remove the body margin */
+                }
+                .card {
+                    margin: 0; /* Remove the card margin */
+                    box-shadow: none; /* Remove any shadow */
+                }
+            }
+        }
     </style>
 {% endblock %}
 {% block content %}
@@ -28,9 +75,13 @@
 
 <div class="card">
     <header class="card-header">
+        <div class="logo-print" style="width: 120px;">
+            <img src="{% static 'home/assets/img/logo/loder.jpg' %}" alt="Logo">
+        </div>
     </header>
     <div class="card-content">
         <div class="content table-responsive">
+            <button onclick="window.print()" class="btn btn-primary mb-3">Print Report</button>
             <table class="table datanew is-fullwidth is-bordered is-hoverable is-striped">
                 <thead>
                     <tr>
@@ -68,7 +119,6 @@
                             <a class="button is-small is-warning" href="#">Not Paid</a>
                             {% endif %}
                         </td>
-                        <!-- <td width="1%"><a href="{% url 'delete-invoice' id=invoice.id %}"><div class="button is-small is-info">Delete</div></a></td> -->
                         <td width="1%"><a class="button is-small is-info" target="_blank" href="{% url 'invoice_pdf' invoice.id %}">Download</a></td>
                     </tr>
                     {% endfor %}
