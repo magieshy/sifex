@@ -1,3 +1,4 @@
+from django.utils.dateparse import parse_date
 import logging
 from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.contrib.auth.views import PasswordChangeView
@@ -16,11 +17,10 @@ from sifex_system.forms import PasswordChangingForm
 from sifex_system.models import *
 from sifex_system.forms import *
 from django.db.models import Sum
-from django.utils.dateparse import parse_date
 import datetime
 from django.utils.timezone import now as timezone_now
 from core.models import *
-from .models import Invoice, LineItem, Customer, Attendance, Staff, AwbLocation
+from .models import Invoice, LineItem, Customer, Attendance, Staff
 import pdfkit
 
 
@@ -46,19 +46,27 @@ from reportlab.lib import colors
 from reportlab.platypus import Image as PlatypusImage, SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
+logger = logging.getLogger(__name__)
 
 def shorten_string(text, max_length):
     if len(text) > max_length:
         return text[:max_length - 3] + "..."
     return text
 
-
-# Set up logging
-logger = logging.getLogger(__name__)
-
 @login_required
 def register_customer(request):
     context = {}
+    if request.method == 'POST':
+        form = CustomerForm(request.POST)
+        if form.is_valid():
+            customer = form.save()
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='CREATE',
+                description=f'Registered customer: {customer.name}'
+            )
+            messages.success(request, 'Customer registered successfully')
+            return redirect('display_customer')
     return render(request, 'system/customer/register.html', context)
 
 @login_required
@@ -70,10 +78,7 @@ def display_customer(request):
 def console(request):
     today = datetime.date.today()
     week = today - datetime.timedelta(7)
-    total_deliverd_awb = 0
     delivered_this_week = Masterawb.objects.filter(POD=True, date_received__gte=week, date_received__lte=today).order_by('-date_received')
-    master_sum = delivered_this_week.aggregate(Sum('awb_kg'))
-    slave_delivered_this_week = delivered_this_week.filter(POD=True, date_received__gte=week, date_received__lte=today)
     pcs = Masterawb.objects.all().order_by('-date_received')
     context = {
         'pcs': pcs,
@@ -138,7 +143,6 @@ def accept_delivered_console(request):
     }
     return render(request, 'system/parcels/importer/delivered.html', context)
 
-
 @login_required
 def accept_pod_console(request):
     pcs = Masterawb.objects.filter(delivered=True)
@@ -149,123 +153,69 @@ def accept_pod_console(request):
 
 @login_required
 def parcel_update_view(request):
-    # master_parcel = Masterawb.objects.get(id=pk)
     form = MasterForm()
     if request.method == "POST" and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         form = MasterForm(request.POST)
         if form.is_valid():
             parcel = form.save(commit=False)
+            parcel.save()
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Updated parcel with AWB: {parcel.awb}'
+            )
             return JsonResponse({'awb': parcel.awb, 'sender_name': parcel.sender_name, 'order_number': parcel.order_number, 'id': parcel.id})
-    return render(request, 'system/parcels/accept_parcel/parcel_update.html', {
-        'form': form,
-    })
+    return render(request, 'system/parcels/accept_parcel/parcel_update.html', {'form': form})
 
 @login_required
 def accept_parcel(request):
-    form = MasterCreateForm(request.POST)
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        awb = request.POST.get('awb')
-        order_number = request.POST.get('order_number')
-        sender_name = request.POST.get('sender_name')
-        sender_address = request.POST.get('sender_address')
-        sender_city = request.POST.get('sender_city')
-        sender_company = request.POST.get('sender_company')
-        sender_tel = request.POST.get('sender_tel')
-        sender_country = request.POST.get('sender_country')
-        receiver_name = request.POST.get('receiver_name')
-        receiver_address = request.POST.get('receiver_address')
-        receiver_company = request.POST.get('receiver_company')
-        receiver_tel = request.POST.get('receiver_tel')
-        receiver_city = request.POST.get('receiver_city')
-        receiver_country = request.POST.get('receiver_country')
-        desc = request.POST.get('desc')
-        freight = request.POST.get('freight')
-        insurance = request.POST.get('insurance')
-        awb_pcs = request.POST.get('awb_pcs')
-        awb_kg = request.POST.get('awb_kg')
-        chargable_weight = request.POST.get('chargable_weight')
-        terms = request.POST.get('terms')
-        volume = request.POST.get('volume')
-        height = request.POST.get('height')
-        width = request.POST.get('width')
-        length = request.POST.get('length')
-        currency = request.POST.get('currency')
-        date_received = request.POST.get('date_received')
-        expected_arrival_date = request.POST.get('expected_arrival_date')
-        custom_value = request.POST.get('custom_value')
-        payment_mode = request.POST.get('payment_mode')
-        awb_type = request.POST.get('awb_type')
-
-        parcel = Masterawb.objects.create(
-            awb=awb, 
-            order_number=order_number,
-            sender_name=sender_name,
-            sender_tel=sender_tel,
-            awb_type=awb_type,
-            sender_address=sender_address,
-            sender_city=sender_city,
-            sender_company=sender_company,
-            sender_country=sender_country,
-            receiver_name=receiver_name,
-            receiver_tel=receiver_tel,
-            receiver_address=receiver_address,
-            receiver_city=receiver_city,
-            receiver_company=receiver_company,
-            receiver_country=receiver_country,
-            desc=desc,
-            freight=freight,
-            insurance=insurance,
-            awb_pcs=awb_pcs,
-            awb_kg=awb_kg,
-            chargable_weight=chargable_weight,
-            terms=terms,
-            volume=volume,
-            height=height,
-            width=width,
-            length=length,
-            user=request.user,
-            currency=currency,
-            date_received=date_received,
-            expected_arrival_date=expected_arrival_date,
-            custom_value=custom_value,
-            payment_mode=payment_mode,
-            accepted=True,
-        )
-        awb_status = MasterStatus.objects.create(master=parcel, user=request.user, status='accepted', date=datetime.datetime.now().date(), time=datetime.datetime.now().time(), terminal='CAN - Guanzhou')
-        return JsonResponse({
-            'id': parcel.id,
-            'awb': parcel.awb,
-            'order_number': parcel.order_number,
-            'sender_name': parcel.sender_name,
-            'sender_tel': parcel.sender_tel,
-            'sender_address': parcel.sender_address,
-            'sender_city': parcel.sender_city,
-            'sender_company': parcel.sender_company,
-            'sender_country': parcel.sender_country,
-            'receiver_name': parcel.receiver_name,
-            'receiver_address': parcel.receiver_address,
-            'receiver_tel': parcel.receiver_tel,
-            'receiver_city': parcel.receiver_city,
-            'receiver_company': parcel.receiver_company,
-            'receiver_country': parcel.receiver_country,
-            'desc': parcel.desc,
-            'freight': parcel.freight,
-            'insurance': parcel.insurance,
-            'awb_pcs': parcel.awb_pcs,
-            'awb_type': parcel.awb_type,
-            'awb_kg': parcel.awb_kg,
-            'chargable_weight': parcel.chargable_weight,
-            'terms': parcel.terms,
-            'volume': parcel.volume,
-            'width': parcel.width,
-            'height': parcel.height,
-            'length': parcel.length,
-            'currency': parcel.currency,
-            'date_received': parcel.date_received,
-            'expected_arrival_date': parcel.expected_arrival_date,
-            'custom_value': parcel.custom_value,
-            'payment_mode': parcel.payment_mode,
-        })
+    if request.method == 'POST':
+        form = MasterCreateForm(request.POST)
+        if form.is_valid():
+            parcel = form.save(commit=False)
+            parcel.user = request.user
+            parcel.accepted = True
+            parcel.save()
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='CREATE',
+                description=f'Accepted parcel with AWB: {parcel.awb}'
+            )
+            return JsonResponse({
+                'id': parcel.id,
+                'awb': parcel.awb,
+                'order_number': parcel.order_number,
+                'sender_name': parcel.sender_name,
+                'sender_tel': parcel.sender_tel,
+                'sender_address': parcel.sender_address,
+                'sender_city': parcel.sender_city,
+                'sender_company': parcel.sender_company,
+                'sender_country': parcel.sender_country,
+                'receiver_name': parcel.receiver_name,
+                'receiver_address': parcel.receiver_address,
+                'receiver_tel': parcel.receiver_tel,
+                'receiver_city': parcel.receiver_city,
+                'receiver_company': parcel.receiver_company,
+                'receiver_country': parcel.receiver_country,
+                'desc': parcel.desc,
+                'freight': parcel.freight,
+                'insurance': parcel.insurance,
+                'awb_pcs': parcel.awb_pcs,
+                'awb_type': parcel.awb_type,
+                'awb_kg': parcel.awb_kg,
+                'chargable_weight': parcel.chargable_weight,
+                'terms': parcel.terms,
+                'volume': parcel.volume,
+                'width': parcel.width,
+                'height': parcel.height,
+                'length': parcel.length,
+                'currency': parcel.currency,
+                'date_received': parcel.date_received,
+                'expected_arrival_date': parcel.expected_arrival_date,
+                'custom_value': parcel.custom_value,
+                'payment_mode': parcel.payment_mode,
+            })
+    return render(request, 'system/parcels/accept_parcel/accept.html', {'form': form})
 
 @login_required
 def accept_form_view(request):
@@ -322,8 +272,12 @@ def add_parcel(request):
             payment_mode=payment_mode,
         )
 
-        sub_parcels = Slaveawb.objects.filter(master=id, user=request.user, date_received=date_received)
-        awb_status = SlaveStatus.objects.create(sub_awb=parcel, user=request.user, status='accepted', date=datetime.datetime.now().date(), time=datetime.datetime.now().time(), terminal='CAN - Guanzhou')
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='CREATE',
+            description=f'Added sub-parcel with AWB: {parcel.awb}'
+        )
+
         return JsonResponse({
             'id': parcel.id,
             'desc': parcel.desc,
@@ -384,35 +338,15 @@ def new_staff(request):
         password2 = request.POST.get('password2')
 
         if User.objects.filter(username=username).exists():
-            messages.success(request, 'username exist')
+            messages.success(request, 'Username exists')
             return redirect('new_staff')
-            return render(request, 'system/users/new_staff.html')
-
-        if acceptance == "on":
-            acceptance = True
-        else:  
-            acceptance = False
-
-        if accountance == "on":
-            accountance = True
-        else:  
-            accountance = False
-            
-        if importer == "on":
-            importer = True
-        else:  
-            importer = False
-
-        if delivery_man == "on":
-            delivery_man = True
-        else:  
-            delivery_man = False
-
-        if management == "on":
-            management = True
-        else:  
-            management = False
         
+        acceptance = acceptance == "on"
+        accountance = accountance == "on"
+        importer = importer == "on"
+        delivery_man = delivery_man == "on"
+        management = management == "on"
+
         if password1 == password2:
             user = User.objects.create_user(
                 username=username,
@@ -426,20 +360,23 @@ def new_staff(request):
                 management=management,
                 password=password1,
             )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='CREATE',
+                description=f'Created staff: {user.username}'
+            )
             messages.success(request, f'{user.username} account created successfully')
             return redirect('new_staff')
-            return render(request, 'system/users/new_staff.html')
         else:
-            messages.success(request, f'enter the same password as before')
+            messages.success(request, 'Enter the same password as before')
             return redirect('new_staff')
-            return render(request, 'system/users/new_staff.html')
     form = UserRoleForm()
     return render(request, 'system/users/new_staff.html', {'form': form})
 
 class PasswordChange(PasswordChangeView):
     form_class = PasswordChangingForm
     success_url = reverse_lazy('success_password')
-    template_name="system/users/password_change.html"
+    template_name = "system/users/password_change.html"
 
 @login_required
 def changepassword(request):
@@ -463,18 +400,35 @@ def add_master_status(request):
             awb.accepted = False 
             awb.loaded = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Updated status to {status} for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
 
 @login_required
 def add_sub_status(request):
     if request.method == 'POST':
         awb_list = request.POST.getlist('id[]')
-
         for id in awb_list:
             awb = Masterawb.objects.get(pk=id)
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status='accepted')
+            MasterStatus.objects.create(master=awb, user=request.user, status='accepted')
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Updated status to accepted for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
         return redirect('accept_console')
 
 @login_required
@@ -491,8 +445,21 @@ def manifested_master_status(request):
             awb.loaded = False 
             awb.manifested = True
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Marked as manifested MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
 
 @login_required
@@ -509,8 +476,21 @@ def departed_master_status(request):
             awb.manifested = False 
             awb.departed = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Marked as departed MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
 
 @login_required
@@ -527,8 +507,21 @@ def arrived_master_status(request):
             awb.departed = False
             awb.arrived = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Marked as arrived MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
 
 @login_required
@@ -545,8 +538,21 @@ def underclearance_master_status(request):
             awb.arrived = False
             awb.under_clearance = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Marked as under clearance MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
 
 @login_required
@@ -563,11 +569,22 @@ def released_master_status(request):
             awb.under_clearance = False
             awb.released = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Marked as released MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
-
-
 
 @login_required
 def payment_master_status(request):
@@ -583,11 +600,22 @@ def payment_master_status(request):
             awb.released = False
             awb.bill = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Marked as bill for payment MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
-
-
 
 @login_required
 def pod_master_status(request):
@@ -604,11 +632,23 @@ def pod_master_status(request):
             awb.delivered = False
             awb.POD = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, delivered_to=delivered_to, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                delivered_to=delivered_to,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Marked as POD for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
-
-
 
 @login_required
 def delivered_master_status(request):
@@ -624,8 +664,21 @@ def delivered_master_status(request):
             awb.invoice_paid = False
             awb.delivered = True 
             awb.save()
-            awb_status = MasterStatus.objects.create(master=awb, user=request.user, status=status, date=date, time=time, note=note, terminal=terminal)
-            messages.success(request, f'{awb_status.master.sender_name} status updated successfully')
+            MasterStatus.objects.create(
+                master=awb,
+                user=request.user,
+                status=status,
+                date=date,
+                time=time,
+                note=note,
+                terminal=terminal
+            )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='UPDATE',
+                description=f'Marked as delivered for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
+            messages.success(request, f'{awb.sender_name} status updated successfully')
         return redirect('accept_console')
 
 @login_required
@@ -677,67 +730,79 @@ def total_month_master_awb_kg(request):
 def update_slave_arr(request, id):
     if request.method == 'POST':
         slave_awb = Slaveawb.objects.get(pk=id)
-        arr_pcs = request.POST.get('arr_pcs')
-        arr_kg = request.POST.get('arr_kg')
-
-        slave_awb.arr_pcs = arr_pcs
-        slave_awb.arr_kg = arr_kg
+        slave_awb.arr_pcs = request.POST.get('arr_pcs')
+        slave_awb.arr_kg = request.POST.get('arr_kg')
         slave_awb.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='UPDATE',
+            description=f'Updated arrival details for SlaveAWB ID: {slave_awb.id}, AWB: {slave_awb.awb}'
+        )
         return redirect('parcel_view', slave_awb.master.id)
 
 @login_required
 def update_master_arr(request, id):
     if request.method == 'POST':
         master_awb = Masterawb.objects.get(pk=id)
-        arr_pcs = request.POST.get('arr_pcs')
-        arr_kg = request.POST.get('arr_kg')
-
-        master_awb.arr_pcs = arr_pcs
-        master_awb.arr_kg = arr_kg
+        master_awb.arr_pcs = request.POST.get('arr_pcs')
+        master_awb.arr_kg = request.POST.get('arr_kg')
         master_awb.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='UPDATE',
+            description=f'Updated arrival details for MasterAWB ID: {master_awb.id}, AWB: {master_awb.awb}'
+        )
         return redirect('parcel_view', master_awb.id)
 
 @login_required
 def update_slave_dlv(request, id):
     if request.method == 'POST':
         slave_awb = Slaveawb.objects.get(pk=id)
-        arr_pcs = request.POST.get('arr_pcs')
-        arr_kg = request.POST.get('arr_kg')
-
-        slave_awb.arr_pcs = arr_pcs
-        slave_awb.arr_kg = arr_kg
+        slave_awb.arr_pcs = request.POST.get('arr_pcs')
+        slave_awb.arr_kg = request.POST.get('arr_kg')
         slave_awb.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='UPDATE',
+            description=f'Updated delivery details for SlaveAWB ID: {slave_awb.id}, AWB: {slave_awb.awb}'
+        )
         return redirect('parcel_view', slave_awb.master.id)
 
 @login_required
 def update_master_dlv(request, id):
     if request.method == 'POST':
         master_awb = Masterawb.objects.get(pk=id)
-        dlv_pcs = request.POST.get('dlv_pcs')
-        dlv_kg = request.POST.get('dlv_kg')
-
-        master_awb.dlv_pcs = dlv_pcs
-        master_awb.dlv_kg = dlv_kg
+        master_awb.dlv_pcs = request.POST.get('dlv_pcs')
+        master_awb.dlv_kg = request.POST.get('dlv_kg')
         master_awb.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='UPDATE',
+            description=f'Updated delivery details for MasterAWB ID: {master_awb.id}, AWB: {master_awb.awb}'
+        )
         return redirect('parcel_view', master_awb.id)
 
 @login_required
 def blog_create_view(request):
-    context = {}
     if request.method == "POST":
         title = request.POST.get('title')
         body = request.POST.get('body')
-        photo = request.FILES['photo']
+        photo = request.FILES.get('photo')
         if not title:
-            messages.error(request, f'title is required')
+            messages.error(request, 'Title is required')
             return redirect('blog_create')
         if not body:
-            messages.error(request, f'body is required')
+            messages.error(request, 'Body is required')
             return redirect('blog_create')
         blog = Post.objects.create(user=request.user, title=title, body=body, photo=photo)
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='CREATE',
+            description=f'Created blog post: {blog.title}'
+        )
         messages.success(request, f'{blog.title} created successfully!')
         return redirect('blogs')
-    return render(request, 'system/blog/create.html', context)
+    return render(request, 'system/blog/create.html')
 
 @login_required
 def blog_view(request):
@@ -767,26 +832,13 @@ def users(request):
 def delete_user(request, id):
     user = User.objects.get(pk=id)
     user.delete()
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='DELETE',
+        description=f'Deleted user: {user.username}'
+    )
     messages.success(request, f'{user.username} deleted successfully')
     return redirect('users')
-
-def upload_quote_bg(request):
-    if request.method == "POST":
-        quote_bg = request.POST.get('quote_bg')
-    context = {}
-    return render(request, '_.html', context)
-
-def upload_service_bg(request):
-    if request.method == "POST":
-        service_bg = request.POST.get('service_bg')
-    context = {}
-    return render(request, '_.html', context)
-
-def upload_about_bg(request):
-    if request.method == "POST":
-        about_bg = request.POST.get('about_bg')
-    context = {}
-    return render(request, '_.html', context)
 
 @login_required
 def on_edit_add_parcel(request):
@@ -837,39 +889,73 @@ def on_edit_add_parcel(request):
             payment_mode=payment_mode,
         )
 
-        sub_parcels = Slaveawb.objects.filter(master=id, date_received=date_received)
-        awb_status = SlaveStatus.objects.create(sub_awb=parcel, status='accepted', date=datetime.datetime.now().date(), time=datetime.datetime.now().time(), terminal='CAN - Guanzhou')
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='CREATE',
+            description=f'Added sub-parcel with AWB: {parcel.awb} for MasterAWB: {master_awb.awb}'
+        )
+
         return redirect('parcel_view', master_awb.id)
 
 @login_required
 def export_masterawb_pdf_label(request, pk):
     awb = Masterawb.objects.get(id=pk)
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Exported PDF label for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+    )
     context = {'awb': awb}
     return render(request, 'system/pdf/export.html', context)
 
+@login_required
 def on_edit_add_parcel_view(request, pk):
     form = SlaveCreateForm()
     awb_id = Masterawb.objects.get(id=pk)
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Accessed sub-parcel creation view for MasterAWB: {awb_id.awb}'
+    )
     ctx = {'master_awb_id': awb_id, 'form': form}
     return render(request, 'system/parcels/importer/add.html', ctx)
 
-
+@login_required
 def location_view(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Accessed location view'
+    )
     return render(request, 'location/index.html')
-
 
 @login_required
 def location_search_result(request):
     query = request.GET.get('query')
     if query:
         parcels = Masterawb.objects.filter(
-            Q(awb__icontains=query) | Q(order_number__icontains=query)
+            Q(awb__icontains=query) | Q(order_number__icontains(query))
         )
         if parcels.exists():
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='READ',
+                description=f'Found parcel for query: {query}'
+            )
             return redirect('location_search_result_found', pk=parcels.first().id)
         else:
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='READ',
+                description=f'No parcel found for query: {query}'
+            )
             return render(request, 'location/result.html', {'error': 'No parcel found.'})
     else:
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description='No query provided for location search'
+        )
         return render(request, 'location/result.html', {'error': 'Please enter a search term.'})
 
 @login_required
@@ -888,7 +974,17 @@ def save_location_info(request):
                 bay=bay,
                 pcs=pcs
             )
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='CREATE',
+                description=f'Saved location info for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
         except Masterawb.DoesNotExist:
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='READ',
+                description=f'Failed to find MasterAWB for location info save, AWB ID: {awb_id}'
+            )
             return redirect('location_search')
 
         return redirect('location_search_result_found', pk=awb.id)
@@ -901,10 +997,25 @@ def location_search_process(request):
     if query:
         try:
             master_awb = Masterawb.objects.get(awb=query)
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='READ',
+                description=f'Found parcel for query: {query}'
+            )
             return redirect('location_search_result_found', pk=master_awb.id)
         except Masterawb.DoesNotExist:
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='READ',
+                description=f'No parcel found for query: {query}'
+            )
             return render(request, 'location/result.html', {'error': 'No parcel found.'})
     else:
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description='No query provided for location search'
+        )
         return render(request, 'location/result.html', {'error': 'Please enter a search term.'})
 
 @login_required
@@ -912,29 +1023,49 @@ def location_search_result_found(request, pk):
     master_awb = get_object_or_404(Masterawb, id=pk)
     locations = AwbLocation.objects.filter(awb=master_awb)
 
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Found locations for MasterAWB ID: {master_awb.id}, AWB: {master_awb.awb}'
+    )
+
     context = {
         'master_awb': master_awb,
         'locations': locations
     }
     return render(request, 'location/result.html', context)
 
-
+@login_required
 def invoice_detail(request, invoice_id):
     try:
         invoice = Invoice.objects.get(id=invoice_id)
         line_items = invoice.invoces_line.all()
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Viewed invoice details for Invoice ID: {invoice.id}'
+        )
         context = {
             'invoice': invoice,
             'line_items': line_items
         }
         return render(request, 'invoice/invoice_detail.html', context)
     except Invoice.DoesNotExist:
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Invoice not found for Invoice ID: {invoice_id}'
+        )
         return HttpResponseNotFound("Invoice not found")
-
 
 class InvoiceListView(View):
     def get(self, *args, **kwargs):
         invoices = Invoice.objects.all()
+        ActivityLog.objects.create(
+            user=self.request.user,
+            activity_type='READ',
+            description='Viewed list of invoices'
+        )
         context = {
             "invoices": invoices,
         }
@@ -950,7 +1081,6 @@ class InvoiceListView(View):
 
         for invoice in invoices:
             awb = invoice.awb
-            print(f"Before Update: {awb.bill}, {awb.billed}")  # Debug statement
             if update_status_for_invoices == 'paid':
                 invoice.status = 'paid'
                 invoice.invoice_detail = update_detail_for_invoice
@@ -962,8 +1092,13 @@ class InvoiceListView(View):
                     status='invoice paid',
                     date=timezone_now().date(),
                     time=timezone_now().time(),
-                    terminal='DAR - Dar es salaam',  # Replace this with actual terminal information if needed
+                    terminal='DAR - Dar es salaam',
                     note='Invoice marked as paid'
+                )
+                ActivityLog.objects.create(
+                    user=request.user,
+                    activity_type='UPDATE',
+                    description=f'Marked invoice as paid for Invoice ID: {invoice.id}, AWB: {awb.awb}'
                 )
             elif update_status_for_invoices == 'credited':
                 invoice.status = 'credited'
@@ -976,22 +1111,22 @@ class InvoiceListView(View):
                     status='invoice credited',
                     date=timezone_now().date(),
                     time=timezone_now().time(),
-                    terminal='DAR - Dar es salaam',  # Replace this with actual terminal information if needed
+                    terminal='DAR - Dar es salaam',
                     note='Invoice marked as credited'
                 )
-            awb.save()  # Ensure the awb object is saved
+                ActivityLog.objects.create(
+                    user=request.user,
+                    activity_type='UPDATE',
+                    description=f'Marked invoice as credited for Invoice ID: {invoice.id}, AWB: {awb.awb}'
+                )
+            awb.save()
             invoice.save()
-            print(f"After Update: {awb.bill}, {awb.billed}")  # Debug statement
 
         return redirect('invoice-list')
-
-
-
 
 @login_required
 def createInvoice(request, pk):
     awb = Masterawb.objects.get(id=pk)
-    heading_message = 'Formset'
     if request.method == 'POST':
         customer = request.POST.get('customer')
         customer_phone = request.POST.get('customer_phone')
@@ -1032,7 +1167,7 @@ def createInvoice(request, pk):
                 customer=invoice,
                 service=service,
                 description=description,
-                tracking_key=awb.awb,  # Assuming tracking_key is a field in Masterawb
+                tracking_key=awb.awb,
                 quantity=quantity,
                 chargable_weight=chargable_weight,
                 rate=rate,
@@ -1045,6 +1180,11 @@ def createInvoice(request, pk):
             awb.bill = False
             awb.invoice_generated = True
             awb.save()
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='CREATE',
+                description=f'Created invoice for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+            )
             return redirect('invoice-list')
 
     context = {
@@ -1053,7 +1193,6 @@ def createInvoice(request, pk):
     }
     return render(request, 'invoice/invoice-create.html', context)
 
-
 @login_required
 def view_PDF(request, id=None):
     invoice = get_object_or_404(Invoice, id=id)
@@ -1061,7 +1200,6 @@ def view_PDF(request, id=None):
 
     invoice_total_usd = sum(item.amount_usd for item in lineitem)
     invoice_total_tzs = sum(item.amount_tz for item in lineitem)
-    invoice_total = invoice_total_usd  # Assuming USD is the main currency
 
     context = {
         "company": {
@@ -1075,7 +1213,7 @@ def view_PDF(request, id=None):
         },
         "invoice_id": invoice.id,
         "invoice_origin": invoice.origin,
-        "invoice_total": invoice_total,
+        "invoice_total": invoice_total_usd,
         "invoice_total_usd": invoice_total_usd,
         "invoice_total_tzs": invoice_total_tzs,
         "customer": invoice.customer,
@@ -1085,8 +1223,12 @@ def view_PDF(request, id=None):
         "billing_address": invoice.billing_address,
         "lineitem": lineitem,
     }
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Viewed PDF for Invoice ID: {invoice.id}'
+    )
     return render(request, 'invoice/pdf_template.html', context)
-
 
 @login_required
 def generate_pdf(request):
@@ -1122,9 +1264,12 @@ def generate_pdf(request):
     p.save()
 
     buffer.seek(0)
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Generated PDF for manifested AWBs'
+    )
     return HttpResponse(buffer, content_type='application/pdf')
-
-
 
 @login_required
 def generate_spreadsheet(request):
@@ -1151,14 +1296,14 @@ def generate_spreadsheet(request):
     workbook.close()
     output.seek(0)
 
-    response.write(output.read())
-    return response
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Generated spreadsheet for manifested AWBs'
+    )
+    return HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-
-
-
-
-
+@login_required
 def change_status(request):
     return redirect('invoice-list')
 
@@ -1169,17 +1314,27 @@ def view_404(request, *args, **kwargs):
 def delete_awb(request, id):
     awb = Masterawb.objects.get(pk=id)
     awb.delete()
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='DELETE',
+        description=f'Deleted MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+    )
     messages.success(request, f'{awb.receiver_name} awb deleted successfully')
     return redirect('accept_console')
 
 @login_required
-# @allowed_user
 def delete_invoice(request, id):
     invoice = Invoice.objects.get(pk=id)
     invoice.delete()
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='DELETE',
+        description=f'Deleted Invoice ID: {invoice.id}, Customer: {invoice.customer}'
+    )
     messages.success(request, f'invoice {invoice.customer} deleted successfully')
     return redirect('invoice-list')
 
+@login_required
 def awb_edit(request, pk):
     if request.method == 'POST':
         master_awb = Masterawb.objects.get(id=pk)
@@ -1241,36 +1396,26 @@ def awb_edit(request, pk):
         master_awb.volume = volume
         master_awb.payment_mode = payment_mode
         master_awb.save()
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='UPDATE',
+            description=f'Edited MasterAWB ID: {master_awb.id}, AWB: {master_awb.awb}'
+        )
         return redirect('parcel_view', master_awb.id)
-
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from reportlab.pdfgen import canvas
-from io import BytesIO
-from django.http import HttpResponse
-from django.conf import settings
-import os
 
 @login_required
 def generate_invoice_pdf(request, invoice_id):
-    # Get the invoice data
     invoice = Invoice.objects.get(id=invoice_id)
     lineitems = LineItem.objects.filter(customer=invoice)
-
 
     def shorten_text(text, max_length):
         if len(text) > max_length:
             return text[:max_length-3] + '...'
         return text
 
-    # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
 
-    # Draw the logo and company info
     logo_path = os.path.join(settings.STATIC_ROOT, 'assets/img/sifex/logo.png')
     if os.path.exists(logo_path):
         p.drawImage(logo_path, 40, 720, width=140, height=50, mask='auto')
@@ -1285,27 +1430,25 @@ def generate_invoice_pdf(request, invoice_id):
     p.drawString(200, 705, "(+255) 688 930 963")
     p.drawString(200, 690, "TIN: 142-996-014")
 
-    # Add invoice status label
     p.saveState()
     p.setFont("Helvetica-Bold", 16)
     if invoice.status == 'paid':
-        p.setFillColorRGB(0, 1, 0)  # Green color for PAID
-        p.translate(500, 700)  # Move to position
-        p.rotate(45)  # Rotate
+        p.setFillColorRGB(0, 1, 0)
+        p.translate(500, 700)
+        p.rotate(45)
         p.drawString(0, 0, "PAID")
     elif invoice.status == 'credited':
-        p.setFillColorRGB(0, 0, 1)  # Blue color for CREDITED
-        p.translate(500, 700)  # Move to position
-        p.rotate(45)  # Rotate
+        p.setFillColorRGB(0, 0, 1)
+        p.translate(500, 700)
+        p.rotate(45)
         p.drawString(0, 0, "CREDITED")
     else:
-        p.setFillColorRGB(1, 0, 0)  # Red color for UNPAID
-        p.translate(500, 700)  # Move to position
-        p.rotate(45)  # Rotate
+        p.setFillColorRGB(1, 0, 0)
+        p.translate(500, 700)
+        p.rotate(45)
         p.drawString(0, 0, "UNPAID")
     p.restoreState()
 
-    # Add customer info
     p.setFont("Helvetica-Bold", 12)
     p.drawString(40, 670, "INVOICE TO:")
     p.setFont("Helvetica", 10)
@@ -1315,14 +1458,12 @@ def generate_invoice_pdf(request, invoice_id):
     if invoice.customer_email:
         p.drawString(40, 610, invoice.customer_email)
 
-    # Add invoice details
     p.setFont("Helvetica-Bold", 12)
     p.drawString(40, 580, f"Invoice #{invoice.id}")
     p.setFont("Helvetica", 10)
     p.drawString(40, 565, f"Date of Invoice: {invoice.date}")
     p.drawString(40, 550, f"Due Date: {invoice.due_date}")
 
-    # Create table for line items
     styles = getSampleStyleSheet()
     styleN = styles["BodyText"]
     styleN.wordWrap = 'CJK'
@@ -1361,13 +1502,11 @@ def generate_invoice_pdf(request, invoice_id):
     table.wrapOn(p, 800, 600)
     table.drawOn(p, 30, 350)
 
-    # Add totals
     p.setFont("Helvetica-Bold", 12)
     p.drawString(40, 300, f"SUBTOTAL: ${invoice.total_amount_usd}")
     p.drawString(40, 285, f"TOTAL IN USD: ${invoice.total_amount_usd}")
     p.drawString(40, 270, f"TOTAL IN TZS: Tzs {invoice.total_amount_tzs}")
 
-    # Add payment instructions
     p.drawString(40, 240, "PAYMENT INSTRUCTION:")
     p.setFont("Helvetica", 10)
     p.drawString(40, 225, "BANK NAME: NMB BANK, AIRPORT BRANCH")
@@ -1377,53 +1516,84 @@ def generate_invoice_pdf(request, invoice_id):
     p.drawString(40, 165, "ACCOUNT NAME: SIFEX COURIER SERVICES COMPANY LTD")
     p.drawString(40, 150, "CURRENCY: TZS")
 
-    # Add terms and conditions
     p.setFont("Helvetica-Bold", 12)
     p.drawString(40, 120, "TERMS AND CONDITIONS:")
     p.setFont("Helvetica", 10)
     p.drawString(40, 105, "A finance charge of 1.5% will be made on unpaid balances after 30 days.")
 
-    # Finish up
     p.showPage()
     p.save()
 
-    # Get the value of the BytesIO buffer and write it to the response.
     buffer.seek(0)
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Generated PDF for Invoice ID: {invoice.id}'
+    )
     return HttpResponse(buffer, content_type='application/pdf')
-
-
-
-
 
 @login_required
 def invoice_generation(request):
     pcs = Masterawb.objects.filter(bill=True)
     exchange_rate = SystemPreference.objects.first()
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Accessed invoice generation page'
+    )
     ctx = {
         'pcs': pcs,
         'exchange_rate': exchange_rate,
     }
     return render(request, 'invoice/generate_invoice.html', ctx)
 
+@login_required
 def list_of_delivered_awb(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Viewed list of delivered AWBs'
+    )
     return render(request, 'system/reports/delivered-goods.html', {})
 
+@login_required
 def list_of_undelivered_awb(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Viewed list of undelivered AWBs'
+    )
     return render(request, 'system/reports/undelivered-goods.html', {})
 
+@login_required
 def list_of_paid_awb(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Viewed list of paid AWBs'
+    )
     return render(request, 'system/reports/paid-goods.html', {})
 
+@login_required
 def list_of_unpaid_awb(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Viewed list of unpaid AWBs'
+    )
     return render(request, 'system/reports/unpaid-goods.html', {})
 
-
+@login_required
 def list_of_credited_awb(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Viewed list of credited AWBs'
+    )
     return render(request, 'system/reports/credited-goods.html', {})
 
 @login_required
 def add_customer(request):
-    context = {}
     if request.method == 'POST':
         name = request.POST.get('name')
         phone = request.POST.get('phone')
@@ -1432,73 +1602,124 @@ def add_customer(request):
         country = request.POST.get('country')
         if not name:
             messages.error(request, 'Name field is required')
-            return render(request, 'system/customer/create.html', context)
+            return render(request, 'system/customer/create.html', {})
         if not phone:
             messages.error(request, 'Phone number field is required')
-            return render(request, 'system/customer/create.html', context)
+            return render(request, 'system/customer/create.html', {})
         customer = Customer.objects.create(name=name, user=request.user, phone=phone, address=address, city=city, country=country)
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='CREATE',
+            description=f'Added customer: {customer.name}'
+        )
         messages.success(request, f'Customer {customer.name} added successfully')
         return redirect('customers-list')
-    return render(request, 'system/customer/create.html', context)
+    return render(request, 'system/customer/create.html', {})
 
 @login_required
 def customer_list(request):
     customers = Customer.objects.all()
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Viewed list of customers'
+    )
     return render(request, 'system/customer/index.html', {'customers': customers})
 
+@login_required
 def delivered_report(request):
     pcs = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        print(date_from)
         pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=True)
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Viewed delivered report from {date_from} to {date_to}'
+        )
     context = {'pcs': pcs}
     return render(request, 'system/reports/dlv-reports.html', context)
 
+@login_required
 def undelivered_report(request):
     pcs = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        print()
         pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=False)
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Viewed undelivered report from {date_from} to {date_to}'
+        )
     context = {'pcs': pcs}
     return render(request, 'system/reports/undlv-reports.html', context)
 
+@login_required
 def paid_report(request):
     invoices = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
         invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='paid')
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Viewed paid report from {date_from} to {date_to}'
+        )
     context = {'invoices': invoices}
     return render(request, 'system/reports/paid-reports.html', context)
 
+@login_required
 def credited_report(request):
     invoices = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
         invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='credited')
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Viewed credited report from {date_from} to {date_to}'
+        )
     context = {'invoices': invoices}
     return render(request, 'system/reports/credited-reports.html', context)
 
+@login_required
 def unpaid_report(request):
     invoices = []
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
         invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='unpaid')
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Viewed unpaid report from {date_from} to {date_to}'
+        )
     context = {'invoices': invoices}
     return render(request, 'system/reports/unpaid-reports.html', context)
 
+@login_required
 def check_staff(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Viewed staff check-in page'
+    )
     return render(request, 'system/attendance/check_staff.html')
 
+@login_required
 def check_staff_by_code(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Checked staff by code'
+    )
     return render(request, 'system/attendance/check_staff_by_code.html')
 
+@login_required
 def check_staff_id(request):
     if request.method == 'POST':
         staffcode = request.POST.get('staffcode')
@@ -1514,21 +1735,20 @@ def check_staff_id(request):
             result = data
         else:
             result = 'not found'
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Checked staff ID for staff code: {staffcode}'
+        )
         return JsonResponse({'data': result})
     return JsonResponse({})
 
-from django.utils import timezone
-
-now = timezone.now()
-date = now.date()
-
+@login_required
 def mark_attendance_in(request):
     if request.method == "POST":
         staffcode = request.POST.get('staffcode')
         staff = Staff.objects.get(code_number=staffcode)
         result = None 
-        print(staffcode)
-        # CHECK IF MEMBER EXISTS AND MARK OUT MEMBER ELSE MARK OUT
         if Attendance.objects.filter(date=date, staff=staff).exists():
             attendances = Attendance.objects.filter(staff=staff)
             for attendance in attendances:
@@ -1539,6 +1759,11 @@ def mark_attendance_in(request):
                     attendance.out_time = now.time()
                     attendance.present = True
                     attendance.save()
+                    ActivityLog.objects.create(
+                        user=request.user,
+                        activity_type='UPDATE',
+                        description=f'Marked attendance out for staff: {staff.name}'
+                    )
                     result = 'signed out successfully'
                     return JsonResponse({'data': result})
         else:
@@ -1551,42 +1776,85 @@ def mark_attendance_in(request):
             }
             data = item
             result = data
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='CREATE',
+                description=f'Marked attendance in for staff: {staff.name}'
+            )
             return JsonResponse({'data': result})
     return JsonResponse({})
 
+@login_required
 def mark_attendance_out(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='UPDATE',
+        description='Marked attendance out'
+    )
     return render(request, 'system/attendance/take_attendance.html', {})
 
+@login_required
 def filter_attendance(request):
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Filtered attendance records'
+    )
     return render(request, 'system/attendance/filter.html', {})
 
+@login_required
 def list_attendance(request):
     date_from = request.POST.get('date_from')
     date_to = request.POST.get('date_to')
     attendances = Attendance.objects.filter(date__gte=date_from, date__lte=date_to)
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Viewed attendance list from {date_from} to {date_to}'
+    )
     return render(request, 'system/attendance/index.html', {'attendances': attendances})
 
+@login_required
 def register_staff(request):
-    context = {}
     if request.method == 'POST':
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         address = request.POST.get('address')
         city = request.POST.get('city')
         country = request.POST.get('country')
-        designation = request.POST.get('designation')
-        department = request.POST.get('department')
-        company = request.POST.get('company')
+        code_number = request.POST.get('code_number')
+        role = request.POST.get('role')
         if not name:
             messages.error(request, 'Name field is required')
-            return render(request, 'system/staff/create.html', context)
+            return render(request, 'system/staff/create.html', {})
         if not phone:
             messages.error(request, 'Phone number field is required')
-            return render(request, 'system/staff/create.html', context)
-        staff = Staff.objects.create(name=name, phone=phone, address=address, city=city, country=country, designation=designation, department=department, company=company)
-        messages.success(request, f'Customer {customer.name} added successfully')
-        return redirect('customers-list')
+            return render(request, 'system/staff/create.html', {})
+        if not code_number:
+            messages.error(request, 'Code number field is required')
+            return render(request, 'system/staff/create.html', {})
+        staff = Staff.objects.create(name=name, user=request.user, phone=phone, address=address, city=city, country=country, code_number=code_number, role=role)
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='CREATE',
+            description=f'Registered staff: {staff.name}'
+        )
+        messages.success(request, f'Staff {staff.name} registered successfully')
+        return redirect('staff-list')
     return render(request, 'system/staff/create.html', {})
+
+@login_required
+def staff_list(request):
+    staff = Staff.objects.all()
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Viewed list of staff'
+    )
+    return render(request, 'system/staff/index.html', {'staff': staff})
+
+
+
 
 
 
@@ -1595,41 +1863,29 @@ def register_staff(request):
 def print_label(request, pk):
     awb = get_object_or_404(Masterawb, pk=pk)
 
-    # Create a file-like buffer to receive PDF data.
     buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=(4 * inch, 6 * inch))
 
-    # Create the PDF object, using the buffer as its "file."
-    p = canvas.Canvas(buffer, pagesize=(4 * inch, 6 * inch))  # Size for Zebra and thermal printers
-
-    # Draw the content of the label
     p.setFont("Helvetica", 10)
-    
-    # Set line width for borders
     p.setLineWidth(1)
+    p.rect(10, 10, 4 * inch - 20, 6 * inch - 20)
     
-    # Draw border around the label
-    p.rect(10, 10, 4 * inch - 20, 6 * inch - 20)  # Draw border with margins
-    
-    # Add the logo image
     logo_path = os.path.join(settings.STATIC_ROOT, 'assets/img/sifex/logo.png')
     if os.path.exists(logo_path):
         p.drawImage(logo_path, 20, 330, width=0.8 * inch, height=0.5 * inch, mask='auto')
     else:
         p.drawString(20, 330, "Logo not found")
     
-    # Add the barcode
     barcode_value = awb.awb
     barcode = code128.Code128(barcode_value, barHeight=10*mm, barWidth=0.5*mm)
     barcode.drawOn(p, 20, 390)
     p.drawString(100, 380, barcode_value)
 
-    # Function to shorten text if it's too long
     def shorten_text(text, max_length):
         if len(text) > max_length:
             return text[:max_length-3] + '...'
         return text
 
-    # Add sender and receiver information
     info = [
         ("Sender Name:", shorten_text(awb.sender_name or '', 30)),
         ("Sender Address:", shorten_text(awb.sender_address or '', 20)),
@@ -1654,18 +1910,16 @@ def print_label(request, pk):
         p.drawString(130, y, value)
         y -= 20
 
-    # Close the PDF object cleanly.
     p.showPage()
     p.save()
 
-    # Get the value of the BytesIO buffer and write it to the response.
     buffer.seek(0)
-    response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="label_{awb.awb}.pdf"'
-    return response
-
-
-
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Printed label for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+    )
+    return HttpResponse(buffer, content_type='application/pdf')
 
 @login_required
 def search_parcel(request):
@@ -1675,15 +1929,28 @@ def search_parcel(request):
             Q(awb__icontains=query) | Q(order_number__icontains=query)
         )
         if parcels.exists():
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='READ',
+                description=f'Searched parcel with query: {query}'
+            )
             return redirect('search_found', pk=parcels.first().id)
         else:
             logger.info(f"No parcel found for query: {query}")
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='READ',
+                description=f'No parcel found for query: {query}'
+            )
             return render(request, 'system/parcels/search/search_results.html', {'error': 'No parcel found.'})
     else:
         logger.info("No query provided.")
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description='No query provided for parcel search'
+        )
         return render(request, 'system/parcels/search/search_results.html', {'error': 'Please enter a search term.'})
-
-
 
 @login_required
 def search_found(request, pk):
@@ -1691,6 +1958,11 @@ def search_found(request, pk):
     master_status = pc.master_status.all()
     slave_pcs = pc.slave_master.filter(accepted=True)
     form = MasterForm(instance=pc)
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Found parcel details for MasterAWB ID: {pc.id}, AWB: {pc.awb}'
+    )
     context = {
         'form': form,
         'master_awb': pc,
@@ -1699,13 +1971,7 @@ def search_found(request, pk):
     }
     return render(request, 'system/parcels/search/search_found.html', context)
 
-
-
-
-
-
-
-# sales report
+# Sales report views
 @login_required
 def generate_sales_report(request):
     if request.method == "POST":
@@ -1714,8 +1980,18 @@ def generate_sales_report(request):
         invoice_detail = request.POST.get('invoice_detail')
 
         if date_from and date_to and invoice_detail:
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='READ',
+                description=f'Generated sales report from {date_from} to {date_to} for {invoice_detail}'
+            )
             return redirect(f'{invoice_detail}_sales_report', date_from=date_from, date_to=date_to)
     
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description='Accessed sales report generation form'
+    )
     return render(request, 'system/reports/generate_sales_report_form.html')
 
 def sales_report_view(request, date_from, date_to, payment_method):
@@ -1736,6 +2012,11 @@ def sales_report_view(request, date_from, date_to, payment_method):
         'payment_method': payment_method
     }
 
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Viewed sales report from {date_from} to {date_to} for {payment_method}'
+    )
     return render(request, f'system/reports/{payment_method}_sales_report.html', context)
 
 def cash_sales_report(request, date_from, date_to):
@@ -1747,16 +2028,11 @@ def bank_sales_report(request, date_from, date_to):
 def mobile_sales_report(request, date_from, date_to):
     return sales_report_view(request, date_from, date_to, 'mobile')
 
-
 @login_required
 def awb_details(request, awb_id):
-    # Get the AWB object
     awb = get_object_or_404(Masterawb, id=awb_id)
+    locations = awb.awb_locations.all()
     
-    # Fetch related locations
-    locations = awb.awb_locations.all()  # Use the related name 'awb_locations'
-    
-    # Prepare the data to return
     locations_data = []
     for location in locations:
         locations_data.append({
@@ -1764,9 +2040,10 @@ def awb_details(request, awb_id):
             'bay': location.bay,
             'pcs': location.pcs
         })
-    
-    # Return the data as JSON
+
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='READ',
+        description=f'Viewed AWB details for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+    )
     return JsonResponse({'locations': locations_data})
-
-
-

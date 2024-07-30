@@ -35,7 +35,27 @@ STATION_CHOICES = (
     ('MCT - Muscat', 'MCT - Muscat'),
     ('BOM - Mumbai', 'BOM - Mumbai'),
     ('ADD - Addis Ababa', 'ADD - Addis Ababa'),
+    
 )
+
+
+
+class ActivityLog(models.Model):
+    # Constants for activity types
+    ACTIVITY_TYPES = (
+        ('CREATE', 'Create'),
+        ('READ', 'Read'),
+        ('UPDATE', 'Update'),
+        ('DELETE', 'Delete'),
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    activity_type = models.CharField(max_length=10, choices=ACTIVITY_TYPES)
+    description = models.TextField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.username} {self.description} at {self.timestamp}'
 
 class Masterawb(models.Model):
     PAYMENT_MODE = (
