@@ -1324,14 +1324,27 @@ def delete_awb(request, id):
 
 @login_required
 def delete_invoice(request, id):
-    invoice = Invoice.objects.get(pk=id)
+    invoice = get_object_or_404(Invoice, pk=id)
+    awb = invoice.awb
+    customer_name = invoice.customer
+
     invoice.delete()
+
+    if awb.billed:
+        awb.billed = False
+        awb.bill = True
+    elif awb.invoice_generated:
+        awb.invoice_generated = False
+        awb.bill = True
+
+    awb.save()
+
     ActivityLog.objects.create(
         user=request.user,
         activity_type='DELETE',
-        description=f'Deleted Invoice ID: {invoice.id}, Customer: {invoice.customer}'
+        description=f'Deleted Invoice ID: {id}, Customer: {customer_name}'
     )
-    messages.success(request, f'invoice {invoice.customer} deleted successfully')
+    messages.success(request, f'Invoice {customer_name} deleted successfully')
     return redirect('invoice-list')
 
 @login_required
