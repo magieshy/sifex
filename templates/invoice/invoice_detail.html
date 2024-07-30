@@ -97,7 +97,7 @@
     </div>
 </section>
 
-{% if invoice.get_status == 'unpaid' %}
+
 <div class="card has-background">
     <header class="card-header">
         <div class="row">
@@ -111,7 +111,7 @@
             </div>
         </div>
     </header>
-   
+   {% if invoice.get_status == 'unpaid' %}
     <div class="card-body">
         <form action="{% url 'invoice-list' %}" method="post">
             {% csrf_token %}
@@ -149,8 +149,9 @@
 
     </form>
     </div>
+    {% endif %}
 </div>
-{% endif %}
+
 {% endblock %}
 
 {% block script %}
