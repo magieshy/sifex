@@ -112,6 +112,7 @@ class Masterawb(models.Model):
     billed = models.BooleanField(default=False)
     delivered = models.BooleanField(default=False)
     POD = models.BooleanField(default=False)
+    deleted = models.BooleanField(default=False)
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuers')
 
@@ -188,6 +189,7 @@ class Invoice(models.Model):
     status = models.CharField(max_length=20, default='unpaid')
     invoice_detail = models.CharField(max_length=20, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_invoices')
+    deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.customer)
@@ -207,6 +209,7 @@ class LineItem(models.Model):
     rate = models.DecimalField(max_digits=9, decimal_places=2)
     amount_tz = models.DecimalField(max_digits=9, decimal_places=2, null=True)
     amount_usd = models.DecimalField(max_digits=9, decimal_places=2, null=True)
+    deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.customer)
@@ -264,6 +267,7 @@ class SystemPreference(models.Model):
     currency = models.CharField(max_length=120, null=True)
     exchange_rate = models.FloatField(null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_preferences')
+    deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.rate}'
