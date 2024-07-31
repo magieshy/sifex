@@ -45,7 +45,9 @@
                                 <a class="button is-small is-warning" href="#">Not Paid</a>
                                 {% endif %}
                             </td>
+                            {% if request.user.management %}
                             <td width="1%"><a href="{% url 'delete-invoice' id=invoice.id %}"><div class="button is-small is-info">Delete</div></a></td>
+                            {% endif %}
                             <td width="1%"><a class="button is-small is-info" target="_blank" href="{% url 'invoice_detail' invoice.id %}">View Invoice</a></td>
                         </tr>
                         {% endfor %}
