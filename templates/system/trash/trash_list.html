@@ -1,1 +1,58 @@
+{% extends 'system/app/index.html' %}
+{% load widget_tweaks %}
+{% block title %}Trash{% endblock %}
 
+{% block page %}Trash{% endblock page %}
+
+{% block content %}
+<h2>Trashed Items</h2>
+
+<h3>Invoices</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for invoice in trashed_invoices %}
+        <tr>
+            <td>{{ invoice.id }}</td>
+            <td>{{ invoice.customer }}</td>
+            <td>{{ invoice.total_amount_tzs }}</td>
+            <td>
+                <a href="{% url 'restore_invoice' invoice.id %}">Restore</a> |
+                <a href="{% url 'permanently_delete_invoice' invoice.id %}">Delete Permanently</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>AWBs</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Receiver</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for awb in trashed_awbs %}
+        <tr>
+            <td>{{ awb.id }}</td>
+            <td>{{ awb.receiver_name }}</td>
+            <td>
+                <a href="{% url 'restore_awb' awb.id %}">Restore</a> |
+                <a href="{% url 'permanently_delete_awb' awb.id %}">Delete Permanently</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
