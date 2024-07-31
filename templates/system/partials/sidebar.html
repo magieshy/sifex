@@ -105,45 +105,6 @@
         </li>
         {% endif %}
 
-        {% if request.user.is_superuser %}
-        <li class="submenu">
-            <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> Cargo</span> <span class="menu-arrow"></span></a>
-            <ul>
-                <li><a href="{% url 'accept_console' %}"><span>Acceptance</span></a></li>
-                <li><a href="{% url 'accept_loaded_console' %}"><span>Load</span></a></li>
-                <li><a href="{% url 'accept_manifested_console' %}"><span>manifest</span></a></li>
-                
-                <li class=""><a href="{% url 'parcel_import' %}"><span>import</span> </a></li>
-                <li class=""><a href="{% url 'accept_arrived_console' %}"><span>arrived</span> </a></li>
-                <li class=""><a href="{% url 'accept_underclearance_console' %}"><span>under clearance</span> </a></li>
-                <li class=""><a href="{% url 'accept_release_console' %}"><span>Release</span> </a></li>
-                <li class=""><a href="{% url 'accept_delivered_console' %}"><span>delivery</span> </a></li>
-                <li class=""><a href="{% url 'accept_pod_console' %}"><span>POD</span> </a></li>
-              
-                <li><a href="{% url 'users' %}"><span>Users</span></a></li>
-                <li><a href="{% url 'invoice-list' %}"><span>Invoices</span></a></li>
-                <li class=""><a href="{% url 'customers-list' %}"><span>Customers</span> </a></li>
-               
-            </ul>
-        </li>
-
-        <!-- <li class="submenu">
-            <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> Attendance</span> <span class="menu-arrow"></span></a>
-            <ul>
-                <li><a href="{% url 'filter-attendance' %}"><span>Report</span></a></li>
-                <li><a href="{% url 'check-staff' %}"><span>mark by qr code</span></a></li>
-                <li><a href="{% url 'check-staff-by-code' %}"><span>mark by code</span></a></li>
-               
-            </ul>
-        </li> -->
-        <li class="submenu">
-            <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> Generate Invoice</span> <span class="menu-arrow"></span></a>
-            <ul>
-                <li class=""><a href="{% url 'generate-invoice' %}"><span>invoice generate</span> </a></li>
-            </ul>
-        </li>
-        {% endif %}
-       
         <li class="submenu">
             <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> Pages</span> <span class="menu-arrow"></span></a>
             <ul>
