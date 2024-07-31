@@ -2060,3 +2060,11 @@ def awb_details(request, awb_id):
         description=f'Viewed AWB details for MasterAWB ID: {awb.id}, AWB: {awb.awb}'
     )
     return JsonResponse({'locations': locations_data})
+
+
+
+
+@login_required
+def activity_log_list(request):
+    logs = ActivityLog.objects.all().order_by('timestamp')
+    return render(request, 'system/history/activity_log_list.html', {'logs': logs})
