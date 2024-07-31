@@ -143,9 +143,11 @@
     <img src="{% static 'system/assets/img/icons/edit.svg' %}" alt="img">
     </a>
     <a href="{% url 'print_label' pc.id %}" target="_blank" data-bs-toggle="tooltip" title="print"><img src="{% static 'system/assets/img/icons/printer.svg' %}" alt="img"></a>
+    {% if request.user.management %}
     <a class="confirm-text" href="{% url 'delete-awb' pc.id %}">
     <img src="{% static 'system/assets/img/icons/delete.svg' %}" alt="img">
     </a>
+    {% endif %}
     </td>
     </tr>
     {% endfor %}
