@@ -120,4 +120,12 @@ urlpatterns = [
     path('filter-attendance', filter_attendance, name="filter-attendance"),
     path('attendance', list_attendance, name="attendance"),
 
+
+
+    path('trash/', trash_view, name='trash'),
+    path('restore-invoice/<int:id>/', restore_invoice, name='restore_invoice'),
+    path('delete-invoice/<int:id>/', permanently_delete_invoice, name='permanently_delete_invoice'),
+    path('restore-awb/<int:id>/', restore_awb, name='restore_awb'),
+    path('delete-awb/<int:id>/', permanently_delete_awb, name='permanently_delete_awb'),
+
 ]
