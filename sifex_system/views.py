@@ -78,7 +78,7 @@ def display_customer(request):
 def console(request):
     today = datetime.date.today()
     week = today - datetime.timedelta(7)
-    delivered_this_week = Masterawb.objects.filter(POD=True, date_received__gte=week, date_received__lte=today).order_by('-date_received')
+    delivered_this_week = Masterawb.objects.filter(POD=True, deleted=False, date_received__gte=week, date_received__lte=today).order_by('-date_received')
     pcs = Masterawb.objects.all().order_by('-date_received')
     context = {
         'pcs': pcs,
@@ -87,7 +87,7 @@ def console(request):
 
 @login_required
 def accept_console(request):
-    pcs = Masterawb.objects.filter(accepted=True)
+    pcs = Masterawb.objects.filter(accepted=True, deleted=False,)
     slave_pcs = Slaveawb.objects.filter(accepted=True).order_by('-date_received')
     context = {
         'pcs': pcs,
@@ -105,7 +105,7 @@ def accept_loaded_console(request):
 
 @login_required
 def accept_manifested_console(request):
-    pcs = Masterawb.objects.filter(manifested=True).order_by('-date_received')
+    pcs = Masterawb.objects.filter(manifested=True, deleted=False,).order_by('-date_received')
     context = {
         'pcs': pcs,
     }
@@ -121,7 +121,7 @@ def accept_arrived_console(request):
 
 @login_required
 def accept_underclearance_console(request):
-    pcs = Masterawb.objects.filter(under_clearance=True).order_by('-date_received')
+    pcs = Masterawb.objects.filter(under_clearance=True, deleted=False,).order_by('-date_received')
     context = {
         'pcs': pcs,
     }
@@ -129,7 +129,7 @@ def accept_underclearance_console(request):
 
 @login_required
 def accept_release_console(request):
-    pcs = Masterawb.objects.filter(released=True).order_by('-date_received')
+    pcs = Masterawb.objects.filter(released=True, deleted=False,).order_by('-date_received')
     context = {
         'pcs': pcs,
     }
@@ -137,7 +137,7 @@ def accept_release_console(request):
 
 @login_required
 def accept_delivered_console(request):
-    pcs = Masterawb.objects.filter(billed=True).order_by('-date_received').prefetch_related('awb_locations')
+    pcs = Masterawb.objects.filter(billed=True, deleted=False,).order_by('-date_received').prefetch_related('awb_locations')
     context = {
         'pcs': pcs,
     }
@@ -145,7 +145,7 @@ def accept_delivered_console(request):
 
 @login_required
 def accept_pod_console(request):
-    pcs = Masterawb.objects.filter(delivered=True)
+    pcs = Masterawb.objects.filter(delivered=True, deleted=False,)
     context = {
         'pcs': pcs,
     }
@@ -316,7 +316,7 @@ def parcel_view(request, pk):
 
 @login_required
 def parcel_import(request):
-    pcs = Masterawb.objects.filter(departed=True).order_by('-date_received')
+    pcs = Masterawb.objects.filter(departed=True, deleted=False,).order_by('-date_received')
     context = {
         'pcs': pcs,
     }
@@ -685,7 +685,7 @@ def delivered_master_status(request):
 def total_master_awb_kg(request):
     today = datetime.date.today()
     month = today - datetime.timedelta(7)
-    master_awbs = Masterawb.objects.filter(date_received__gte=month, date_received__lte=today, accepted=True)
+    master_awbs = Masterawb.objects.filter(date_received__gte=month, date_received__lte=today, deleted=False, accepted=True)
    
     finalrep = {}
 
@@ -708,7 +708,7 @@ def total_master_awb_kg(request):
 def total_month_master_awb_kg(request):
     today = datetime.date.today()
     month = today - datetime.timedelta(30)
-    master_awbs = Masterawb.objects.filter(date_received__gte=month, date_received__lte=today, POD=True)
+    master_awbs = Masterawb.objects.filter(date_received__gte=month, deleted=False, date_received__lte=today, POD=True)
     finalrep = {}
 
     def get_awb_type(master_awb):
@@ -934,7 +934,7 @@ def location_search_result(request):
     query = request.GET.get('query')
     if query:
         parcels = Masterawb.objects.filter(
-            Q(awb__icontains=query) | Q(order_number__icontains(query))
+            Q(awb__icontains=query) | Q(order_number__icontains=query)
         )
         if parcels.exists():
             ActivityLog.objects.create(
@@ -1060,7 +1060,7 @@ def invoice_detail(request, invoice_id):
 
 class InvoiceListView(View):
     def get(self, *args, **kwargs):
-        invoices = Invoice.objects.all()
+        invoices = Invoice.objects.filter(deleted=False)
         ActivityLog.objects.create(
             user=self.request.user,
             activity_type='READ',
@@ -1232,7 +1232,7 @@ def view_PDF(request, id=None):
 
 @login_required
 def generate_pdf(request):
-    pcs = Masterawb.objects.all()
+    pcs = Masterawb.objects.filter(deleted=False)
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="manifested_awb.pdf"'
@@ -1273,7 +1273,7 @@ def generate_pdf(request):
 
 @login_required
 def generate_spreadsheet(request):
-    pcs = Masterawb.objects.all()
+    pcs = Masterawb.objects.filter(deleted=False)
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="manifested_awb.xlsx"'
@@ -1312,40 +1312,42 @@ def view_404(request, *args, **kwargs):
 
 @login_required
 def delete_awb(request, id):
-    awb = Masterawb.objects.get(pk=id)
-    awb.delete()
+    awb = get_object_or_404(Masterawb, pk=id)
+    awb.deleted = True
+    awb.save()
+
     ActivityLog.objects.create(
         user=request.user,
         activity_type='DELETE',
-        description=f'Deleted MasterAWB ID: {awb.id}, AWB: {awb.awb}'
+        description=f'Marked AWB ID: {awb.id} as deleted'
     )
-    messages.success(request, f'{awb.receiver_name} awb deleted successfully')
+    messages.success(request, f'AWB {awb.awb} marked as deleted successfully')
     return redirect('accept_console')
+
 
 @login_required
 def delete_invoice(request, id):
     invoice = get_object_or_404(Invoice, pk=id)
     awb = invoice.awb
-    customer_name = invoice.customer
-
-    invoice.delete()
-
+    invoice.deleted = True
+    invoice.save()
+    
     if awb.billed:
         awb.billed = False
         awb.bill = True
     elif awb.invoice_generated:
         awb.invoice_generated = False
         awb.bill = True
-
     awb.save()
 
     ActivityLog.objects.create(
         user=request.user,
         activity_type='DELETE',
-        description=f'Deleted Invoice ID: {id}, Customer: {customer_name}'
+        description=f'Marked Invoice ID: {invoice.id}, Customer: {invoice.customer} as deleted'
     )
-    messages.success(request, f'Invoice {customer_name} deleted successfully')
+    messages.success(request, f'Invoice {invoice.customer} marked as deleted successfully')
     return redirect('invoice-list')
+
 
 @login_required
 def awb_edit(request, pk):
@@ -1547,7 +1549,7 @@ def generate_invoice_pdf(request, invoice_id):
 
 @login_required
 def invoice_generation(request):
-    pcs = Masterawb.objects.filter(bill=True)
+    pcs = Masterawb.objects.filter(bill=True, deleted=False)
     exchange_rate = SystemPreference.objects.first()
     ActivityLog.objects.create(
         user=request.user,
@@ -1645,7 +1647,7 @@ def delivered_report(request):
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=True)
+        pcs = Masterawb.objects.filter(deleted=False, date_received__gte=date_from, date_received__lte=date_to, delivered=True)
         ActivityLog.objects.create(
             user=request.user,
             activity_type='READ',
@@ -1660,7 +1662,7 @@ def undelivered_report(request):
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        pcs = Masterawb.objects.filter(date_received__gte=date_from, date_received__lte=date_to, delivered=False)
+        pcs = Masterawb.objects.filter(deleted=False, date_received__gte=date_from, date_received__lte=date_to, delivered=False)
         ActivityLog.objects.create(
             user=request.user,
             activity_type='READ',
@@ -1949,7 +1951,6 @@ def search_parcel(request):
             )
             return redirect('search_found', pk=parcels.first().id)
         else:
-            logger.info(f"No parcel found for query: {query}")
             ActivityLog.objects.create(
                 user=request.user,
                 activity_type='READ',
@@ -1957,13 +1958,15 @@ def search_parcel(request):
             )
             return render(request, 'system/parcels/search/search_results.html', {'error': 'No parcel found.'})
     else:
-        logger.info("No query provided.")
         ActivityLog.objects.create(
             user=request.user,
             activity_type='READ',
             description='No query provided for parcel search'
         )
         return render(request, 'system/parcels/search/search_results.html', {'error': 'Please enter a search term.'})
+
+
+
 
 @login_required
 def search_found(request, pk):
@@ -2068,3 +2071,86 @@ def awb_details(request, awb_id):
 def activity_log_list(request):
     logs = ActivityLog.objects.all().order_by('timestamp')
     return render(request, 'system/history/activity_log_list.html', {'logs': logs})
+
+
+
+@login_required
+def trash_view(request):
+    trashed_invoices = Invoice.objects.filter(deleted=True)
+    trashed_awbs = Masterawb.objects.filter(deleted=True)
+    context = {
+        'trashed_invoices': trashed_invoices,
+        'trashed_awbs': trashed_awbs,
+    }
+    return render(request, 'system/trash/trash_list.html', context)
+
+
+
+
+
+@login_required
+def restore_invoice(request, id):
+    invoice = get_object_or_404(Invoice, pk=id)
+    awb = invoice.awb
+    invoice.deleted = False
+    invoice.save()
+
+    if invoice.get_status == 'paid' or invoice.get_status == 'credited':
+        awb.bill=False 
+        awb.invoice_generated = True
+        awb.save()
+
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='UPDATE',
+        description=f'Restored Invoice ID: {invoice.id}, Customer: {invoice.customer}'
+    )
+    messages.success(request, f'Invoice {invoice.customer} restored successfully')
+    return redirect('trash')
+
+@login_required
+def permanently_delete_invoice(request, id):
+    invoice = get_object_or_404(Invoice, pk=id)
+    invoice_id = invoice.id
+    invoice.delete()
+
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='DELETE',
+        description=f'Permanently deleted Invoice ID: {invoice_id}'
+    )
+    messages.success(request, f'Invoice {invoice_id} permanently deleted')
+    return redirect('trash')
+
+
+
+
+
+@login_required
+def restore_awb(request, id):
+    awb = get_object_or_404(Masterawb, pk=id)
+    awb.deleted = False
+    awb.save()
+
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='UPDATE',
+        description=f'Restored AWB ID: {awb.id}'
+    )
+    messages.success(request, f'AWB {awb.awb} restored successfully')
+    return redirect('trash')
+
+@login_required
+def permanently_delete_awb(request, id):
+    awb = get_object_or_404(Masterawb, pk=id)
+    awb_id = awb.id
+    awb.delete()
+
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='DELETE',
+        description=f'Permanently deleted AWB ID: {awb_id}'
+    )
+    messages.success(request, f'AWB {awb_id} permanently deleted')
+    return redirect('trash')
+
