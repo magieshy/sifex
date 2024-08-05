@@ -169,53 +169,115 @@ def parcel_update_view(request):
 
 @login_required
 def accept_parcel(request):
-    if request.method == 'POST':
-        form = MasterCreateForm(request.POST)
-        if form.is_valid():
-            parcel = form.save(commit=False)
-            parcel.user = request.user
-            parcel.accepted = True
-            parcel.save()
-            ActivityLog.objects.create(
-                user=request.user,
-                activity_type='CREATE',
-                description=f'Accepted parcel with AWB: {parcel.awb}'
-            )
-            return JsonResponse({
-                'id': parcel.id,
-                'awb': parcel.awb,
-                'order_number': parcel.order_number,
-                'sender_name': parcel.sender_name,
-                'sender_tel': parcel.sender_tel,
-                'sender_address': parcel.sender_address,
-                'sender_city': parcel.sender_city,
-                'sender_company': parcel.sender_company,
-                'sender_country': parcel.sender_country,
-                'receiver_name': parcel.receiver_name,
-                'receiver_address': parcel.receiver_address,
-                'receiver_tel': parcel.receiver_tel,
-                'receiver_city': parcel.receiver_city,
-                'receiver_company': parcel.receiver_company,
-                'receiver_country': parcel.receiver_country,
-                'desc': parcel.desc,
-                'freight': parcel.freight,
-                'insurance': parcel.insurance,
-                'awb_pcs': parcel.awb_pcs,
-                'awb_type': parcel.awb_type,
-                'awb_kg': parcel.awb_kg,
-                'chargable_weight': parcel.chargable_weight,
-                'terms': parcel.terms,
-                'volume': parcel.volume,
-                'width': parcel.width,
-                'height': parcel.height,
-                'length': parcel.length,
-                'currency': parcel.currency,
-                'date_received': parcel.date_received,
-                'expected_arrival_date': parcel.expected_arrival_date,
-                'custom_value': parcel.custom_value,
-                'payment_mode': parcel.payment_mode,
-            })
-    return render(request, 'system/parcels/accept_parcel/accept.html', {'form': form})
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'POST':
+        awb = request.POST.get('awb')
+        order_number = request.POST.get('order_number')
+        sender_name = request.POST.get('sender_name')
+        sender_address = request.POST.get('sender_address')
+        sender_city = request.POST.get('sender_city')
+        sender_company = request.POST.get('sender_company')
+        sender_tel = request.POST.get('sender_tel')
+        sender_country = request.POST.get('sender_country')
+        receiver_name = request.POST.get('receiver_name')
+        receiver_address = request.POST.get('receiver_address')
+        receiver_company = request.POST.get('receiver_company')
+        receiver_tel = request.POST.get('receiver_tel')
+        receiver_city = request.POST.get('receiver_city')
+        receiver_country = request.POST.get('receiver_country')
+        desc = request.POST.get('desc')
+        freight = request.POST.get('freight')
+        insurance = request.POST.get('insurance')
+        awb_pcs = request.POST.get('awb_pcs')
+        awb_kg = request.POST.get('awb_kg')
+        chargable_weight = request.POST.get('chargable_weight')
+        terms = request.POST.get('terms')
+        volume = request.POST.get('volume')
+        height = request.POST.get('height')
+        width = request.POST.get('width')
+        length = request.POST.get('length')
+        currency = request.POST.get('currency')
+        date_received = request.POST.get('date_received')
+        expected_arrival_date = request.POST.get('expected_arrival_date')
+        custom_value = request.POST.get('custom_value')
+        payment_mode = request.POST.get('payment_mode')
+        awb_type = request.POST.get('awb_type')
+
+        parcel = Masterawb.objects.create(
+            awb=awb, 
+            order_number=order_number,
+            sender_name=sender_name,
+            sender_tel=sender_tel,
+            awb_type=awb_type,
+            sender_address=sender_address,
+            sender_city=sender_city,
+            sender_company=sender_company,
+            sender_country=sender_country,
+            receiver_name=receiver_name,
+            receiver_tel=receiver_tel,
+            receiver_address=receiver_address,
+            receiver_city=receiver_city,
+            receiver_company=receiver_company,
+            receiver_country=receiver_country,
+            desc=desc,
+            freight=freight,
+            insurance=insurance,
+            awb_pcs=awb_pcs,
+            awb_kg=awb_kg,
+            chargable_weight=chargable_weight,
+            terms=terms,
+            volume=volume,
+            height=height,
+            width=width,
+            length=length,
+            user=request.user,
+            currency=currency,
+            date_received=date_received,
+            expected_arrival_date=expected_arrival_date,
+            custom_value=custom_value,
+            payment_mode=payment_mode,
+            accepted=True,
+        )
+        awb_status = MasterStatus.objects.create(master=parcel, user=request.user, status='accepted', date=datetime.datetime.now().date(), time=datetime.datetime.now().time(), terminal='CAN - Guanzhou')
+        return JsonResponse({
+            'id': parcel.id,
+            'awb': parcel.awb,
+            'order_number': parcel.order_number,
+            'sender_name': parcel.sender_name,
+            'sender_tel': parcel.sender_tel,
+            'sender_address': parcel.sender_address,
+            'sender_city': parcel.sender_city,
+            'sender_company': parcel.sender_company,
+            'sender_country': parcel.sender_country,
+            'receiver_name': parcel.receiver_name,
+            'receiver_address': parcel.receiver_address,
+            'receiver_tel': parcel.receiver_tel,
+            'receiver_city': parcel.receiver_city,
+            'receiver_company': parcel.receiver_company,
+            'receiver_country': parcel.receiver_country,
+            'desc': parcel.desc,
+            'freight': parcel.freight,
+            'insurance': parcel.insurance,
+            'awb_pcs': parcel.awb_pcs,
+            'awb_type': parcel.awb_type,
+            'awb_kg': parcel.awb_kg,
+            'chargable_weight': parcel.chargable_weight,
+            'terms': parcel.terms,
+            'volume': parcel.volume,
+            'width': parcel.width,
+            'height': parcel.height,
+            'length': parcel.length,
+            'currency': parcel.currency,
+            'date_received': parcel.date_received,
+            'expected_arrival_date': parcel.expected_arrival_date,
+            'custom_value': parcel.custom_value,
+            'payment_mode': parcel.payment_mode,
+        })
+
+@login_required
+def accept_form_view(request):
+    form = MasterCreateForm()
+    context = {'form': form}
+    return render(request, 'system/parcels/accept_parcel/accept.html', context)
 
 @login_required
 def accept_form_view(request):
@@ -2135,7 +2197,7 @@ def restore_awb(request, id):
     ActivityLog.objects.create(
         user=request.user,
         activity_type='UPDATE',
-        description=f'Restored AWB ID: {awb.id}'
+        description=f'Restored AWB ID: {awb.awb}'
     )
     messages.success(request, f'AWB {awb.awb} restored successfully')
     return redirect('trash')
@@ -2149,8 +2211,8 @@ def permanently_delete_awb(request, id):
     ActivityLog.objects.create(
         user=request.user,
         activity_type='DELETE',
-        description=f'Permanently deleted AWB ID: {awb_id}'
+        description=f'Permanently deleted AWB ID: {awb.awb}'
     )
-    messages.success(request, f'AWB {awb_id} permanently deleted')
+    messages.success(request, f'AWB {awb.awb} permanently deleted')
     return redirect('trash')
 
