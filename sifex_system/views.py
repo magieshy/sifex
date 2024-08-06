@@ -393,7 +393,7 @@ def new_staff(request):
         last_name = request.POST.get('last_name')
         accountance = request.POST.get('accountance')
         acceptance = request.POST.get('acceptance')
-        delivery_man = request.POST.get('delivery_man')
+        wharehouse = request.POST.get('wharehouse')
         management = request.POST.get('management')
         importer = request.POST.get('importer')
         password1 = request.POST.get('password1')
@@ -406,7 +406,7 @@ def new_staff(request):
         acceptance = acceptance == "on"
         accountance = accountance == "on"
         importer = importer == "on"
-        delivery_man = delivery_man == "on"
+        wharehouse = wharehouse == "on"
         management = management == "on"
 
         if password1 == password2:
@@ -418,7 +418,7 @@ def new_staff(request):
                 acceptance=acceptance,
                 accountance=accountance,
                 importer=importer,
-                delivery_man=delivery_man,
+                wharehouse=wharehouse,
                 management=management,
                 password=password1,
             )
