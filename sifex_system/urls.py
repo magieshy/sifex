@@ -137,5 +137,6 @@ urlpatterns = [
     path('users/reset_password/<int:user_id>/', reset_password, name='reset_password'),
     path('users/activate/<int:user_id>/', activate_user, name='activate_user'),
     path('users/deactivate/<int:user_id>/', deactivate_user, name='deactivate_user'),
+    path('users/reset_password/<int:user_id>/', reset_password, name='reset_password'),
 
 ]
