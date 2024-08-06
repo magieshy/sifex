@@ -2216,3 +2216,57 @@ def permanently_delete_awb(request, id):
     messages.success(request, f'AWB {awb.awb} permanently deleted')
     return redirect('trash')
 
+
+
+
+
+
+
+
+@login_required
+def view_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    return render(request, 'system/users/view_user.html', {'user': user})
+
+@login_required
+def edit_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        user.username = request.POST.get('username')
+        user.email = request.POST.get('email')
+        user.save()
+        messages.success(request, 'User updated successfully')
+        return redirect(reverse('users'))
+    return render(request, 'system/users/edit_user.html', {'user': user})
+
+@login_required
+def delete_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user.delete()
+    messages.success(request, 'User deleted successfully')
+    return redirect(reverse('users'))
+
+@login_required
+def reset_password(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    new_password = 'new_password'  # Define how you want to generate the new password
+    user.set_password(new_password)
+    user.save()
+    messages.success(request, 'Password reset successfully')
+    return redirect(reverse('users'))
+
+@login_required
+def activate_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user.is_active = True
+    user.save()
+    messages.success(request, 'User activated successfully')
+    return redirect(reverse('users'))
+
+@login_required
+def deactivate_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user.is_active = False
+    user.save()
+    messages.success(request, 'User deactivated successfully')
+    return redirect(reverse('users'))
