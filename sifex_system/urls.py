@@ -128,4 +128,14 @@ urlpatterns = [
     path('restore-awb/<int:id>/', restore_awb, name='restore_awb'),
     path('delete-awb/<int:id>/', permanently_delete_awb, name='permanently_delete_awb'),
 
+
+
+
+    path('users/view/<int:user_id>/', view_user, name='view_user'),
+    path('users/edit/<int:user_id>/', edit_user, name='edit_user'),
+    path('users/delete/<int:user_id>/', delete_user, name='delete_user'),
+    path('users/reset_password/<int:user_id>/', reset_password, name='reset_password'),
+    path('users/activate/<int:user_id>/', activate_user, name='activate_user'),
+    path('users/deactivate/<int:user_id>/', deactivate_user, name='deactivate_user'),
+
 ]
