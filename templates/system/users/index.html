@@ -4,14 +4,14 @@
 {% load static %}
 {% block style %} 
 <style>
-    .myModalAlert{
+    .myModalAlert {
         position: absolute;
         z-index: 100;
         top: 50vh;
         left: 35vw;
     }
 
-    .myModal{
+    .myModal {
         position: absolute;
         z-index: 100;
         top: 50vh;
@@ -21,6 +21,29 @@
 
     .alert h3 {
         color: #fff;
+    }
+
+    .modal-dialog {
+        max-width: 400px;
+        margin: 1.75rem auto;
+    }
+
+    .modal-content {
+        background-color: #f8f9fa;
+        border-radius: 0.3rem;
+        z-index: 1050;
+    }
+
+    .modal-backdrop {
+        z-index: 1040;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #e9ecef;
     }
 </style>
 {% endblock style %}
@@ -78,7 +101,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table  datanew">
+            <table class="table datanew">
                 <thead>
                     <tr>
                         <th>
@@ -106,19 +129,15 @@
                         </td>
                         <td>{{ user.email }}</td>
                         <td>
-
                             {% if user.is_active %}
                             <a class="me-3" href="{% url 'deactivate_user' user.id %}">
                                 deactivate
-                                <!-- <img src="{% static 'system/assets/img/icons/deactivate.svg' %}" alt="img"> -->
                             </a>
                             {% else %}
                             <a class="me-3" href="{% url 'activate_user' user.id %}">
                                 activate
-                                <!-- <img src="{% static 'system/assets/img/icons/activate.svg' %}" alt="img"> -->
                             </a>
                             {% endif %}
-
 
                             <a class="me-3" href="{% url 'reset_password' user.id %}">
                                 reset password
@@ -145,16 +164,14 @@
 </div>
 
 <!-- Confirm Delete Modal -->
-<div id="confirmDeleteModal" class="modal myModal" tabindex="-1" role="dialog">
+<div id="confirmDeleteModal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Confirm Deletion</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body myModalAlert">
+            <div class="modal-body">
                 <p>Are you sure you want to delete this user?</p>
             </div>
             <div class="modal-footer">
