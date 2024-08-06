@@ -2234,6 +2234,11 @@ def edit_user(request, user_id):
     if request.method == 'POST':
         user.username = request.POST.get('username')
         user.email = request.POST.get('email')
+        user.wharehouse = 'wharehouse' in request.POST
+        user.acceptance = 'acceptance' in request.POST
+        user.importer = 'importer' in request.POST
+        user.accountance = 'accountance' in request.POST
+        user.management = 'management' in request.POST
         user.save()
         messages.success(request, 'User updated successfully')
         return redirect(reverse('users'))
