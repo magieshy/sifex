@@ -2270,3 +2270,20 @@ def deactivate_user(request, user_id):
     user.save()
     messages.success(request, 'User deactivated successfully')
     return redirect(reverse('users'))
+
+
+
+@login_required
+def reset_password(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data['new_password']
+            user.set_password(new_password)
+            user.save()
+            messages.success(request, 'Password reset successfully')
+            return redirect(reverse('user_list'))
+    else:
+        form = PasswordResetForm()
+    return render(request, 'system/users/reset_password.html', {'form': form, 'user': user})
