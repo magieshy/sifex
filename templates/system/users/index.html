@@ -107,11 +107,6 @@
     <td>{{ user.email }}</td>
     <td>
     
-    <a class="me-3" href="{% url 'reset_password' user.id %}">
-        reset password
-        <!-- <img src="{% static 'system/assets/img/icons/reset.svg' %}" alt="img"> -->
-    </a>
-    
     {% if user.is_active %}
     <a class="me-3" href="{% url 'deactivate_user' user.id %}">
         deactivate
@@ -123,6 +118,11 @@
         <!-- <img src="{% static 'system/assets/img/icons/activate.svg' %}" alt="img"> -->
     </a>
     {% endif %}
+
+
+    <a class="me-3" href="{% url 'reset_password' user.id %}">
+        <img src="{% static 'system/assets/img/icons/reset.svg' %}" alt="img">
+    </a>
 
     <a class="me-3" href="{% url 'view_user' user.id %}">
         <img src="{% static 'system/assets/img/icons/eye.svg' %}" alt="img">
