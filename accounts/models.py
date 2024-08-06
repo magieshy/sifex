@@ -8,7 +8,7 @@ from django.dispatch import receiver
 
 
 class User(AbstractUser):
-    delivery_man = models.BooleanField(default=False, verbose_name='delivery man')
+    wharehouse = models.BooleanField(default=False, verbose_name='wharehouse')
     acceptance = models.BooleanField(default=False, verbose_name='acceptance')
     importer = models.BooleanField(default=False, verbose_name='import')
     accountance = models.BooleanField(default=False, verbose_name='accountance')
