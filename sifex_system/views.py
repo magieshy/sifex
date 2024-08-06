@@ -2283,7 +2283,7 @@ def reset_password(request, user_id):
             user.set_password(new_password)
             user.save()
             messages.success(request, 'Password reset successfully')
-            return redirect(reverse('user_list'))
+            return redirect(reverse('users'))
     else:
         form = PasswordResetForm()
     return render(request, 'system/users/reset_password.html', {'form': form, 'user': user})
