@@ -79,7 +79,10 @@
                         <td>{{pc.awb_pcs}}</td>
                         <td>{{pc.awb_kg}}</td>
                         <td>
-                            <a class="btn btn-success" href="{% url 'invoice-create' pc.id %}" style="color: #fff;">Generate invoice</a>
+                            <a class="btn btn-success generate-btn" href="{% url 'invoice-create' pc.id %}" style="color: #fff;">
+                                Generate invoice
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -92,7 +95,15 @@
 {% block script %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Additional scripts if needed
+        document.querySelectorAll('.generate-btn').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const spinner = this.querySelector('.spinner-border');
+                spinner.classList.remove('d-none');
+                this.classList.add('disabled');
+                window.location.href = this.href;
+            });
+        });
     });
 </script>
 {% endblock %}
