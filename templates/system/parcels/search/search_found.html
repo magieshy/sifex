@@ -209,15 +209,21 @@
         </div>
     
         <div class="row" >
-            <div class="col-md-6 col-lg-6 col-12">
+            <div class="col-md-4 col-lg-4 col-12">
                 <div class="form-group">
                     <label for="">{{form.custom_value.label}}</label>
                     {{form.custom_value|attr:"readonly"}}
                 </div>
             </div>
            
+            <div class="col-md-4 col-lg-4 col-12">
+                <div class="form-group">
+                    <label for="">{{form.awb_type.label}}</label>
+                    {{form.awb_type|attr:"readonly"}}
+                </div>
+            </div>
           
-            <div class="col-md-6 col-lg-6 col-sm-12">
+            <div class="col-md-4 col-lg-4 col-sm-12">
                 <div class="form-group">
                     <label for="">{{form.payment_mode.label}}</label>
                     {{form.payment_mode|attr:"readonly"}}
