@@ -24,8 +24,9 @@
             <td>{{ invoice.customer }}</td>
             <td>{{ invoice.total_amount_tzs }}</td>
             <td>
-                <a href="{% url 'restore_invoice' invoice.id %}">Restore</a> |
-                <a href="{% url 'permanently_delete_invoice' invoice.id %}">Delete Permanently</a>
+                <a href="{% url 'restore_invoice' invoice.id %}" class="button is-small is-info action-btn" data-action="Restore">Restore</a> |
+                <a href="{% url 'permanently_delete_invoice' invoice.id %}" class="button is-small is-danger action-btn" data-action="Delete Permanently">Delete Permanently</a> |
+                <a class="button is-small is-info action-btn" href="{% url 'invoice_detail' invoice.id %}" data-action="View Invoice">View Invoice</a>
             </td>
         </tr>
         {% endfor %}
@@ -47,12 +48,100 @@
             <td>{{ awb.id }}</td>
             <td>{{ awb.receiver_name }}</td>
             <td>
-                <a href="{% url 'restore_awb' awb.id %}">Restore</a> |
-                <a href="{% url 'permanently_delete_awb' awb.id %}">Delete Permanently</a>
+                <a href="{% url 'restore_awb' awb.id %}" class="button is-small is-info action-btn" data-action="Restore">Restore</a> |
+                <a href="{% url 'permanently_delete_awb' awb.id %}" class="button is-small is-danger action-btn" data-action="Delete Permanently">Delete Permanently</a> | 
+                <a class="button is-small is-info action-btn" target="_blank" href="{% url 'parcel_view' awb.id %}" data-action="View">View</a>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
+<!-- Modal for confirming actions -->
+<div class="modal" id="confirmModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Confirm <span id="actionName"></span></p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <p>Are you sure you want to <span id="confirmActionText"></span>?</p>
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button is-danger" id="confirmAction">Yes</button>
+            <button class="button cancel-btn">Cancel</button>
+        </footer>
+    </div>
+</div>
+
+<!-- Loader -->
+<div id="loader" style="display: none;">
+    <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const actionButtons = document.querySelectorAll('.action-btn');
+    const modal = document.getElementById('confirmModal');
+    const closeButton = modal.querySelector('.delete');
+    const cancelButton = modal.querySelector('.cancel-btn');
+    const confirmButton = modal.querySelector('#confirmAction');
+    const actionName = document.getElementById('actionName');
+    const confirmActionText = document.getElementById('confirmActionText');
+    let actionUrl = '';
+    const loader = document.getElementById('loader');
+
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            actionUrl = this.getAttribute('href');
+            const action = this.getAttribute('data-action');
+            actionName.textContent = action;
+            confirmActionText.textContent = action.toLowerCase();
+            modal.classList.add('is-active');
+        });
+    });
+
+    closeButton.addEventListener('click', () => {
+        modal.classList.remove('is-active');
+    });
+
+    cancelButton.addEventListener('click', () => {
+        modal.classList.remove('is-active');
+    });
+
+    confirmButton.addEventListener('click', () => {
+        confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+        confirmButton.classList.add('is-loading');
+
+        fetch(actionUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(response => {
+            if (response.ok) {
+                modal.classList.remove('is-active');
+                loader.style.display = 'block';
+                window.location.href = actionUrl;
+            } else {
+                alert('An error occurred. Please try again.');
+                confirmButton.classList.remove('is-loading');
+                confirmButton.innerHTML = 'Yes';
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+            confirmButton.classList.remove('is-loading');
+            confirmButton.innerHTML = 'Yes';
+        });
+    });
+});
+</script>
 {% endblock %}
