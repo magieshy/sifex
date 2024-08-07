@@ -48,7 +48,7 @@
                                 </a>
                             </td>
                             {% endif %}
-                            <td width="1%"><a class="button is-small is-info" target="_blank" href="{% url 'invoice_detail' invoice.id %}">View Invoice</a></td>
+                            <td width="1%"><a class="button is-small is-info" href="{% url 'invoice_detail' invoice.id %}">View Invoice</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
