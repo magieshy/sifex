@@ -71,7 +71,7 @@
                             <tr>
                                 <td>{{ item.service }}</td>
                                 <td>{{ item.description }}</td>
-                                <td>{{ item.customer.origin }}</td>
+                                <td>{{ item.invoice.origin }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>{{ item.chargable_weight }}</td>
                                 <td>{{ item.rate }}</td>
@@ -107,11 +107,11 @@
                 </p>
             </div>
             <div class="col-md-6 col-lg-6">
-                <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn secondary"><i class="fa fa-download"></i> Download</a>
+                <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn-secondary download-btn"><i class="fa fa-download"></i> Download</a>
             </div>
         </div>
     </header>
-   {% if invoice.get_status == 'unpaid' %}
+    {% if invoice.get_status == 'unpaid' %}
     <div class="card-body">
         <form action="{% url 'invoice-list' %}" method="post">
             {% csrf_token %}
@@ -143,7 +143,7 @@
 
         <div class="container">
             <div class="row bt-20">
-                <input class="button btn btn-secondary is-info is-rounded" type="submit" value="Mark Payment" name="mybtn">
+                <input class="button btn btn-secondary is-info is-rounded submit-btn" type="submit" value="Mark Payment" name="mybtn">
             </div>
         </div>
 
@@ -168,6 +168,29 @@
         });
         flatpickr("#id_due_date", {
             dateFormat: "Y-m-d",
+        });
+
+        document.querySelectorAll('.download-btn').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm';
+                spinner.role = 'status';
+                spinner.ariaHidden = 'true';
+                this.appendChild(spinner);
+                this.classList.add('disabled');
+            });
+        });
+
+        document.querySelectorAll('.submit-btn').forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm';
+                spinner.role = 'status';
+                spinner.ariaHidden = 'true';
+                this.value = 'Loading...';
+                this.appendChild(spinner);
+                this.classList.add('disabled');
+            });
         });
     });
 </script>
