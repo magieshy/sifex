@@ -12,7 +12,10 @@
     <thead>
         <tr>
             <th>ID</th>
+            <th>AWB</th>
             <th>Customer</th>
+            <th>PCS</th>
+            <th>Weight (Kg)</th>
             <th>Amount</th>
             <th>Actions</th>
         </tr>
@@ -21,7 +24,10 @@
         {% for invoice in trashed_invoices %}
         <tr>
             <td>{{ invoice.id }}</td>
+            <td>{{ invoice.awb.awb }}</td>
             <td>{{ invoice.customer }}</td>
+            <td>{{ invoice.awb.awb_pcs }}</td>
+            <td>{{ invoice.awb.awb_kg }}</td>
             <td>{{ invoice.total_amount_tzs }}</td>
             <td>
                 <a href="{% url 'restore_invoice' invoice.id %}" class="button is-small is-info action-btn" data-action="Restore">Restore</a> |
@@ -38,6 +44,9 @@
     <thead>
         <tr>
             <th>ID</th>
+            <th>AWB</th>
+            <th>PCS</th>
+            <th>Weight (Kg)</th>
             <th>Receiver</th>
             <th>Actions</th>
         </tr>
@@ -46,6 +55,9 @@
         {% for awb in trashed_awbs %}
         <tr>
             <td>{{ awb.id }}</td>
+            <td>{{ awb.awb }}</td>
+            <td>{{ awb.awb_pcs }}</td>
+            <td>{{ awb.awb_kg }}</td>
             <td>{{ awb.receiver_name }}</td>
             <td>
                 <a href="{% url 'restore_awb' awb.id %}" class="button is-small is-info action-btn" data-action="Restore">Restore</a> |
