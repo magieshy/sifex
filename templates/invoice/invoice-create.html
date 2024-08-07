@@ -1,5 +1,5 @@
 {% extends 'system/app/index.html' %}
-{% block page %} invoice create {% endblock page %}
+{% block page %}invoice create{% endblock page %}
 {% block title %}invoice create{% endblock %}
 {% load static %}{% load bulma_tags %}
 {% block content %}
@@ -65,7 +65,8 @@
                             <h3 class="title is-4">Total($): <span id="total"></span></h3>
                         </div>
                         <div class="col-md-8 col-lg-8">
-                            <button type="submit" class="button btn btn-success btn-block is-info is-half">Generate invoice</button>
+                            <button type="submit" class="button btn btn-success btn-block is-info is-half" id="generate-btn">Generate invoice</button>
+                            <button type="button" class="button btn btn-primary btn-block is-loading is-half d-none" id="loader-btn" disabled>Loading...</button>
                         </div>
                    </div>
                 </form>
@@ -169,6 +170,12 @@
         e.preventDefault();
         deleteForm('form', $(this));
         return false;
+    });
+
+    // Add loader button functionality
+    document.getElementById('generate-btn').addEventListener('click', function() {
+        document.getElementById('generate-btn').classList.add('d-none');
+        document.getElementById('loader-btn').classList.remove('d-none');
     });
 </script>
 {% endblock %}
