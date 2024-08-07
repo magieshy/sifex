@@ -1,37 +1,46 @@
-const acceptContainer = document.getElementById('accept-form-wraper')
-const responseContainer = document.getElementById('response-form-wraper')
-const addParcelContainer = document.getElementById('add-form-wraper')
-const acceptBtn = document.getElementById('save-accept-btn')
-const addResponseBtn = document.getElementById('add-response-btn')
-const addParcelBtn = document.getElementById('save-parcel-btn')
+const acceptContainer = document.getElementById('accept-form-wraper');
+const responseContainer = document.getElementById('response-form-wraper');
+const addParcelContainer = document.getElementById('add-form-wraper');
+const acceptBtn = document.getElementById('save-accept-btn');
+const addResponseBtn = document.getElementById('add-response-btn');
+const addParcelBtn = document.getElementById('save-parcel-btn');
 const awbBtn = document.getElementById('add-awb-btn');
 
-const idWIdth = document.getElementById('id_width')
-const idHeight = document.getElementById('id_height')
-const idLength = document.getElementById('id_length')
-const idVolume = document.getElementById('id_volume')
+const idWidth = document.getElementById('id_width');
+const idHeight = document.getElementById('id_height');
+const idLength = document.getElementById('id_length');
+const idVolume = document.getElementById('id_volume');
 
+function validateForm() {
+    let isValid = true;
+    const requiredFields = [
+        'id_awb', 'id_order_number', 'id_sender_name', 'id_sender_tel', 'id_sender_address',
+        'id_sender_city', 'id_sender_country', 'id_receiver_name', 'id_receiver_address',
+        'id_receiver_tel', 'id_receiver_city', 'id_receiver_country', 'id_awb_type',
+        'id_desc', 'id_freight', 'id_insurance', 'id_awb_pcs', 'id_awb_kg', 'id_chargable_weight',
+        'id_terms', 'id_width', 'id_height', 'id_length', 'id_currency', 'id_date_received',
+        'id_expected_arrival_date', 'id_custom_value', 'id_payment_mode'
+    ];
 
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field.value.trim() === '') {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
 
-// function getCookie(name) {
-//     let cookieValue = null;
-//     if (document.cookie && document.cookie !== '') {
-//         const cookies = document.cookie.split(';');
-//         for (let i = 0; i < cookies.length; i++) {
-//             const cookie = cookies[i].trim();
-//             // Does this cookie string begin with the name we want?
-//             if (cookie.substring(0, name.length + 1) === (name + '=')) {
-//                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-//                 break;
-//             }
-//         }
-//     }
-//     return cookieValue;
-//    }
-//    const csrftoken = getCookie('csrftoken');
+    return isValid;
+}
 
-function hideacceptform(e){
-    e.preventDefault()
+function hideacceptform(e) {
+    e.preventDefault();
+    if (!validateForm()) {
+        alert('Please fill out all required fields.');
+        return;
+    }
 
     $.ajax({
         type: 'POST',
@@ -40,7 +49,6 @@ function hideacceptform(e){
             'csrfmiddlewaretoken': csrftoken,
             'awb': document.getElementById('id_awb').value,
             'order_number': document.getElementById('id_order_number').value,
-            'sender_name': document.getElementById('id_sender_name').value,
             'sender_name': document.getElementById('id_sender_name').value,
             'sender_tel': document.getElementById('id_sender_tel').value,
             'sender_address': document.getElementById('id_sender_address').value,
@@ -68,11 +76,10 @@ function hideacceptform(e){
             'expected_arrival_date': document.getElementById('id_expected_arrival_date').value,
             'custom_value': document.getElementById('id_custom_value').value,
             'payment_mode': document.getElementById('id_payment_mode').value,
-
         },
-        success: (res)=>{
-            acceptContainer.classList.add('hide-accept-form')
-            responseContainer.classList.remove('hide-response-form')
+        success: (res) => {
+            acceptContainer.classList.add('hide-accept-form');
+            responseContainer.classList.remove('hide-response-form');
             responseContainer.innerHTML += `
             <div class="card-body">
             <form method="post" id="response-form" class="accept-form" enctype="multipart/form-data">
@@ -188,24 +195,27 @@ function hideacceptform(e){
         </form>
     </div>
             
-    `
-        const addBtn = document.getElementById('add-parcel-btn')
-        function showAddParccelForm(){
-            addParcelContainer.classList.remove('hide-add-form')
+    `;
+        const addBtn = document.getElementById('add-parcel-btn');
+        function showAddParccelForm() {
+            addParcelContainer.classList.remove('hide-add-form');
         }
 
         addBtn.addEventListener('click', showAddParccelForm);
         },
-        error: (err)=>{
-            console.log(err)
+        error: (err) => {
+            console.log(err);
         }
     });
 }
 
+function sendAddParcel(e) {
+    e.preventDefault();
+    if (!validateForm()) {
+        alert('Please fill out all required fields.');
+        return;
+    }
 
-
-function sendAddParcel(e){
-    e.preventDefault()
     $.ajax({
         type: 'POST',
         url: '/sifex/save_parcel/',
@@ -228,87 +238,60 @@ function sendAddParcel(e){
             'expected_arrival_date': document.getElementById('res_id_expected_arrival_date').value,
             'custom_value': document.getElementById('res_id_custom_value').value,
             'payment_mode': document.getElementById('res_id_payment_mode').value,
-
         },
-        success: (response)=>{
-            console.log(response)
-            addParcelContainer.classList.add('hide-add-form')
+        success: (response) => {
+            console.log(response);
+            addParcelContainer.classList.add('hide-add-form');
         },
-        error: (err)=>{
-            console.log(err)
+        error: (err) => {
+            console.log(err);
         },
-    })
+    });
 }
 
 acceptBtn.addEventListener('click', hideacceptform);
 addParcelBtn.addEventListener('click', sendAddParcel);
 
-
-
-function getKeys(){
-
-       
-var today = new Date();
-var mydate = today.getDate();
-
-var myDay = today.getUTCDay();
-var tt = today.getTime();
-var myhrs = today.getHours();
-var myminutes = today.getMinutes();
-var myseconds = today.getSeconds();
-
-var mymonth = today.getMonth()+1; 
-var myyear = today.getFullYear().toString().substr(-2);
-if(mydate<10) 
-{
-    mydate='0'+mydate;
-} 
-
-if(mymonth<10) 
-{
-    mymonth='0'+mymonth;
-} 
-
-today = 'SX'+mydate+''+mymonth+''+myyear+''+myhrs+''+myminutes+''+myseconds+''+myDay;
-
-document.getElementById("id_awb").value = today;
-}
-
-document.getElementById('awb-btn').addEventListener("click", getKeys);
-
-
-function getParcelKeys(){
-
-       
+function getKeys() {
     var today = new Date();
     var mydate = today.getDate();
-    
     var myDay = today.getUTCDay();
     var tt = today.getTime();
     var myhrs = today.getHours();
     var myminutes = today.getMinutes();
     var myseconds = today.getSeconds();
-    
-    var mymonth = today.getMonth()+1; 
+    var mymonth = today.getMonth() + 1;
     var myyear = today.getFullYear().toString().substr(-2);
-    if(mydate<10) 
-    {
-        mydate='0'+mydate;
-    } 
-    
-    if(mymonth<10) 
-    {
-        mymonth='0'+mymonth;
-    } 
-    
-    today = 'SX'+mydate+''+mymonth+''+myyear+''+myhrs+''+myminutes+''+myseconds+''+myDay;
-    
+    if (mydate < 10) {
+        mydate = '0' + mydate;
+    }
+    if (mymonth < 10) {
+        mymonth = '0' + mymonth;
+    }
+    today = 'SX' + mydate + '' + mymonth + '' + myyear + '' + myhrs + '' + myminutes + '' + myseconds + '' + myDay;
+    document.getElementById("id_awb").value = today;
+}
+
+document.getElementById('awb-btn').addEventListener("click", getKeys);
+
+function getParcelKeys() {
+    var today = new Date();
+    var mydate = today.getDate();
+    var myDay = today.getUTCDay();
+    var tt = today.getTime();
+    var myhrs = today.getHours();
+    var myminutes = today.getMinutes();
+    var myseconds = today.getSeconds();
+    var mymonth = today.getMonth() + 1;
+    var myyear = today.getFullYear().toString().substr(-2);
+    if (mydate < 10) {
+        mydate = '0' + mydate;
+    }
+    if (mymonth < 10) {
+        mymonth = '0' + mymonth;
+    }
+    today = 'SX' + mydate + '' + mymonth + '' + myyear + '' + myhrs + '' + myminutes + '' + myseconds + '' + myDay;
     document.getElementById("res_id_awb").value = today;
 }
 
 document.getElementById('request-key').addEventListener("click", getParcelKeys);
-
-
-
-
-
