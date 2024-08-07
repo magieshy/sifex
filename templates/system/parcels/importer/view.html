@@ -82,6 +82,14 @@
                     {{form.sender_tel}}
                 </div>
             </div>
+
+            <div class="col-md-3 col-lg-3 col-12">
+                <div class="form-group">
+                    <label for="">{{form.sender_company.label}}</label>
+                    {{form.sender_company}}
+                </div>
+            </div>
+
             <div class="col-md-3 col-lg-3 col-sm-12">
                 <div class="form-group">
                     <label for="">{{form.sender_city.label}}</label>
@@ -94,6 +102,14 @@
                     {{form.receiver_tel}}
                 </div>
             </div>
+
+            <div class="col-md-3 col-lg-3 col-sm-12">
+                <div class="form-group">
+                    <label for="">{{form.receiver_company.label}}</label>
+                    {{form.receiver_company}}
+                </div>
+            </div>
+
             <div class="col-md-3 col-lg-3 col-sm-12">
                 <div class="form-group">
                     <label for="">{{form.receiver_city.label}}</label>
@@ -212,7 +228,15 @@
         </div>
     
         <div class="row" >
-            <div class="col-md-6 col-lg-6 col-12">
+            <div class="col-md-4 col-lg-4 col-12">
+                <div class="form-group">
+                    <label for="">{{form.awb_type.label}}</label>
+                    {{form.awb_type}}
+                </div>
+            </div>
+
+
+            <div class="col-md-4 col-lg-4 col-12">
                 <div class="form-group">
                     <label for="">{{form.custom_value.label}}</label>
                     {{form.custom_value}}
@@ -220,7 +244,7 @@
             </div>
            
           
-            <div class="col-md-6 col-lg-6 col-sm-12">
+            <div class="col-md-4 col-lg-4 col-sm-12">
                 <div class="form-group">
                     <label for="">{{form.payment_mode.label}}</label>
                     {{form.payment_mode}}
@@ -289,13 +313,13 @@
 
     </div>
     </div>
-    
+    {% if request.user.management %}
     <div class="card">
         <div class="card-body">
             <a href="{% url 'accept_form_view' %}" class="btn btn-primary btn-block">Add New Awb</a>
         </div>
     </div>
-    
+    {% endif %}
     <div class="card">
         <div class="card-body">
             <div class="row mt-3">
