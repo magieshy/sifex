@@ -107,7 +107,7 @@
                 </p>
             </div>
             <div class="col-md-6 col-lg-6">
-                <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn-secondary download-btn"><i class="fa fa-download"></i> Download</a>
+                <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn-secondary download-btn" download><i class="fa fa-download"></i> Download</a>
             </div>
         </div>
     </header>
@@ -178,6 +178,12 @@
                 spinner.ariaHidden = 'true';
                 this.appendChild(spinner);
                 this.classList.add('disabled');
+
+                // Stop the loader after the download starts
+                setTimeout(() => {
+                    spinner.remove();
+                    this.classList.remove('disabled');
+                }, 2000); // Adjust the delay as necessary
             });
         });
 
