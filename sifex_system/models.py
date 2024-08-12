@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 # Constants for choices
@@ -92,7 +93,7 @@ class Masterawb(models.Model):
     expected_arrival_date = models.DateTimeField(null=True, blank=True)
     date_received = models.DateTimeField(null=True, blank=True)
     custom_value = models.CharField(max_length=255, blank=True)
-    payment_mode = models.CharField(max_length=255, choices=PAYMENT_MODE, blank=True)
+    payment_mode = models.CharField(max_length=255, null=True)
     awb_type = models.CharField(max_length=255, choices=TYPE_CHOICES, null=True)
     dlv_pcs = models.CharField(max_length=255, null=True, blank=True)
     dlv_kg = models.FloatField(null=True, blank=True)
@@ -310,3 +311,22 @@ class Attendance(models.Model):
 
     def __str__(self):
         return self.staff.name
+
+
+
+
+
+class AwbHistory(models.Model):
+    master_awb = models.ForeignKey(Masterawb, on_delete=models.CASCADE, related_name='history')
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    change_summary = models.TextField(null=True, blank=True)
+    remark = models.TextField(null=True, blank=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Changed by {self.changed_by.username} at {self.changed_at}"
+
+
+
+
+
