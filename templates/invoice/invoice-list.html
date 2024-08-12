@@ -20,7 +20,6 @@
                             <th>DATE</th>
                             <th>STATUS</th>
                             <th></th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,14 +40,15 @@
                                 <a class="button is-small is-warning" href="#">Not Paid</a>
                                 {% endif %}
                             </td>
-                            {% if request.user.management %}
+                            
                             <td width="1%">
+                                {% if request.user.management %}
                                 <a href="#" class="delete-btn button is-small is-info" data-url="{% url 'delete-invoice' id=invoice.id %}">
                                     Delete
                                 </a>
+                                {% endif %}
+                                <a class="button is-small is-info" href="{% url 'invoice_detail' invoice.id %}">View Invoice</a>
                             </td>
-                            {% endif %}
-                            <td width="1%"><a class="button is-small is-info" href="{% url 'invoice_detail' invoice.id %}">View Invoice</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
