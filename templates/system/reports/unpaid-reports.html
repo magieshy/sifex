@@ -1,10 +1,10 @@
 {% extends 'system/app/index.html' %}
 {% load static %}
 {% load widget_tweaks %}
-{% block title %}unpaid invoices list{% endblock %}
+{% block title %}Unpaid Invoices List{% endblock %}
 
-{% block page %}unpaid invoices list{% endblock page %}
-{% block slogan %}list of unpaid invoices{% endblock slogan %} 
+{% block page %}Unpaid Invoices List{% endblock %}
+{% block slogan %}List of Unpaid Invoices{% endblock slogan %} 
 
 {% block style %}
     <style>
@@ -68,9 +68,7 @@
 {% endblock %}
 {% block content %}
 <div class="page-header">
-    <div class="page-title">
-
-    </div>
+    <div class="page-title"></div>
 </div>
 
 <div class="card">
@@ -79,9 +77,19 @@
             <img src="{% static 'home/assets/img/logo/loder.jpg' %}" alt="Logo">
         </div>
     </header>
+    
+    {% if invoices %}
     <div class="card-content">
         <div class="content table-responsive">
             <button onclick="window.print()" class="btn btn-primary mb-3">Print Report</button>
+
+            <!-- Summary Section -->
+            <div class="mb-4">
+                <h4>Total Unpaid Invoices: {{ total_invoices }}</h4>
+                <h4>Total Amount (USD): {{ total_amount_usd }}</h4>
+                <h4>Total Amount (TZS): {{ total_amount_tzs }}</h4>
+            </div>
+
             <table class="table datanew is-fullwidth is-bordered is-hoverable is-striped">
                 <thead>
                     <tr>
@@ -126,6 +134,11 @@
             </table>
         </div>
     </div>
+    {% else %}
+    <div class="card-body">
+        <h4 class="text-center">No unpaid invoices found for the selected date range.</h4>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 {% block script %}
