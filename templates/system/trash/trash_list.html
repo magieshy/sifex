@@ -33,7 +33,7 @@
     </thead>
     <tbody>
         {% for invoice in trashed_invoices %}
-        <tr>
+        <tr id="invoice-row-{{ invoice.id }}">
             <td>{{ invoice.id }}</td>
             <td>{{ invoice.awb.awb }}</td>
             <td>{{ invoice.customer }}</td>
@@ -42,8 +42,10 @@
             <td>{{ invoice.awb.awb_type }}</td>
             <td>{{ invoice.total_amount_tzs }}</td>
             <td>
-                <a href="{% url 'restore_invoice' invoice.id %}" class="button is-small is-info action-btn" data-action="Restore">Restore</a> |
-                <a href="{% url 'permanently_delete_invoice' invoice.id %}" class="button is-small is-danger action-btn" data-action="Delete Permanently">Delete Permanently</a> |
+                <a href="javascript:void(0);" class="button is-small is-info action-btn" 
+                   onclick="restoreInvoice('{{ invoice.id }}')">Restore</a> |
+                <a href="javascript:void(0);" class="button is-small is-danger action-btn" 
+                   onclick="confirmDelete('{{ invoice.id }}', 'invoice')">Delete Permanently</a> |
                 <a class="button is-small is-info action-btn" href="{% url 'invoice_detail' invoice.id %}" data-action="View Invoice">View Invoice</a>
             </td>
         </tr>
@@ -66,7 +68,7 @@
     </thead>
     <tbody>
         {% for awb in trashed_awbs %}
-        <tr>
+        <tr id="awb-row-{{ awb.id }}">
             <td>{{ awb.id }}</td>
             <td>{{ awb.awb }}</td>
             <td>{{ awb.awb_pcs }}</td>
@@ -74,8 +76,10 @@
             <td>{{ awb.receiver_name }}</td>
             <td>{{ awb.awb_type }}</td>
             <td>
-                <a href="{% url 'restore_awb' awb.id %}" class="button is-small is-info action-btn" data-action="Restore">Restore</a> |
-                <a href="{% url 'permanently_delete_awb' awb.id %}" class="button is-small is-danger action-btn" data-action="Delete Permanently">Delete Permanently</a> | 
+                <a href="javascript:void(0);" class="button is-small is-info action-btn" 
+                   onclick="restoreAwb('{{ awb.id }}')">Restore</a> |
+                <a href="javascript:void(0);" class="button is-small is-danger action-btn" 
+                   onclick="confirmDelete('{{ awb.id }}', 'awb')">Delete Permanently</a> | 
                 <a class="button is-small is-info action-btn" target="_blank" href="{% url 'parcel_view' awb.id %}" data-action="View">View</a>
             </td>
         </tr>
@@ -92,11 +96,28 @@
             <button class="delete" aria-label="close"></button>
         </header>
         <section class="modal-card-body">
-            <p>Are you sure you want to <span id="confirmActionText"></span>?</p>
+            <p>Are you sure you want to permanently delete this <span id="itemType"></span>? This action cannot be undone.</p>
         </section>
         <footer class="modal-card-foot">
             <button class="button is-danger" id="confirmAction">Yes</button>
             <button class="button cancel-btn">Cancel</button>
+        </footer>
+    </div>
+</div>
+
+<!-- Modal for success message -->
+<div class="modal" id="successModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Success</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <p id="successMessage">The item was successfully deleted.</p>
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button is-success" id="closeSuccessModal">OK</button>
         </footer>
     </div>
 </div>
@@ -114,60 +135,118 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const actionButtons = document.querySelectorAll('.action-btn');
-    const modal = document.getElementById('confirmModal');
-    const closeButton = modal.querySelector('.delete');
-    const cancelButton = modal.querySelector('.cancel-btn');
-    const confirmButton = modal.querySelector('#confirmAction');
+    const confirmModal = document.getElementById('confirmModal');
+    const successModal = document.getElementById('successModal');
+    const closeSuccessModalButton = document.getElementById('closeSuccessModal');
+    const closeButton = confirmModal.querySelector('.delete');
+    const cancelButton = confirmModal.querySelector('.cancel-btn');
+    const confirmButton = confirmModal.querySelector('#confirmAction');
     const actionName = document.getElementById('actionName');
-    const confirmActionText = document.getElementById('confirmActionText');
-    let actionUrl = '';
-    const loader = document.getElementById('loader');
-
-    actionButtons.forEach(button => {
-        button.addEventListener('click', function (e) {
-            e.preventDefault();
-            actionUrl = this.getAttribute('href');
-            const action = this.getAttribute('data-action');
-            actionName.textContent = action;
-            confirmActionText.textContent = action.toLowerCase();
-            modal.classList.add('is-active');
-        });
-    });
+    const itemType = document.getElementById('itemType');
+    let deleteUrl = '';
 
     closeButton.addEventListener('click', () => {
-        modal.classList.remove('is-active');
+        confirmModal.classList.remove('is-active');
     });
 
     cancelButton.addEventListener('click', () => {
-        modal.classList.remove('is-active');
+        confirmModal.classList.remove('is-active');
+    });
+
+    closeSuccessModalButton.addEventListener('click', () => {
+        successModal.classList.remove('is-active');
     });
 
     confirmButton.addEventListener('click', () => {
-        confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-        confirmButton.classList.add('is-loading');
-
-        fetch(actionUrl, {
-            method: 'GET',
+        confirmModal.classList.remove('is-active');
+        fetch(deleteUrl, {
+            method: 'DELETE',
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        }).then(response => {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(response => {
             if (response.ok) {
-                modal.classList.remove('is-active');
-                loader.style.display = 'block';
-                window.location.href = actionUrl;
+                document.getElementById(`${itemType.textContent}-row-${deleteUrl.split('/').slice(-2, -1)[0]}`).remove();
+                showSuccessModal(`${itemType.textContent.charAt(0).toUpperCase() + itemType.textContent.slice(1)} permanently deleted.`);
             } else {
-                alert('An error occurred. Please try again.');
-                confirmButton.classList.remove('is-loading');
-                confirmButton.innerHTML = 'Yes';
+                alert(`Failed to delete the ${itemType.textContent}. Please try again.`);
             }
-        }).catch(error => {
+        })
+        .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-            confirmButton.classList.remove('is-loading');
-            confirmButton.innerHTML = 'Yes';
+            alert(`An error occurred while deleting the ${itemType.textContent}.`);
         });
     });
+
+    function showSuccessModal(message) {
+        document.getElementById('successMessage').textContent = message;
+        successModal.classList.add('is-active');
+    }
+
+    // Function to handle permanent deletion for invoices and AWBs
+    function confirmDelete(id, type) {
+        deleteUrl = `/sifex/delete-${type}/permanently/${id}/`;
+        actionName.textContent = 'Delete Permanently';
+        itemType.textContent = type;
+        confirmModal.classList.add('is-active');
+    }
+
+    // JavaScript function to handle restoration for invoices
+    function restoreInvoice(invoiceId) {
+        if (confirm('Are you sure you want to restore this invoice?')) {
+            fetch(`/sifex/restore-invoice/${invoiceId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById(`invoice-row-${invoiceId}`).remove();
+                    alert('Invoice restored.');
+                } else {
+                    alert('Failed to restore the invoice. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while restoring the invoice.');
+            });
+        }
+    }
+
+    // JavaScript function to handle restoration for AWBs
+    function restoreAwb(awbId) {
+        if (confirm('Are you sure you want to restore this AWB?')) {
+            fetch(`/sifex/restore-awb/${awbId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById(`awb-row-${awbId}`).remove();
+                    alert('AWB restored.');
+                } else {
+                    alert('Failed to restore the AWB. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while restoring the AWB.');
+            });
+        }
+    }
+    
+    // Attach the functions to global scope for use in inline JavaScript in the template
+    window.confirmDelete = confirmDelete;
+    window.restoreInvoice = restoreInvoice;
+    window.restoreAwb = restoreAwb;
 
     // Search functionality
     const searchInput = document.getElementById('searchInput');
