@@ -13,7 +13,18 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th>INVOICE</th>
+                            <th>
+                                <a href="?sort_by=id&order={% if sort_order == 'asc' %}desc{% else %}asc{% endif %}">
+                                    INVOICE NO:
+                                    {% if sort_by == 'id' %}
+                                        {% if sort_order == 'asc' %}
+                                            <span>&#9650;</span> <!-- Upward arrow -->
+                                        {% else %}
+                                            <span>&#9660;</span> <!-- Downward arrow -->
+                                        {% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
                             <th>TRACKING NUMBER</th>
                             <th>ORIGIN</th>
                             <th>CUSTOMER</th>
