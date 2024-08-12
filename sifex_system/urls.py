@@ -25,6 +25,7 @@ urlpatterns = [
     # search
     path('search/', search_parcel, name='search_parcel'),
     path('search/<int:pk>/', search_found, name='search_found'),
+    path('awb-history/', awb_history, name='awb_history'),
 
     path('accept_console/', accept_console, name="accept_console"),
     path('accept_loaded_console/', accept_loaded_console, name="accept_loaded_console"),
@@ -138,5 +139,7 @@ urlpatterns = [
     path('users/activate/<int:user_id>/', activate_user, name='activate_user'),
     path('users/deactivate/<int:user_id>/', deactivate_user, name='deactivate_user'),
     path('users/reset_password/<int:user_id>/', reset_password, name='reset_password'),
+
+
 
 ]
