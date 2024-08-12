@@ -1,6 +1,7 @@
 from django.utils.dateparse import parse_date
 import logging
 from django.shortcuts import render, redirect, get_object_or_404, reverse
+from django.views.generic import ListView
 from django.contrib.auth.views import PasswordChangeView
 from django.template.loader import get_template
 from django.views import View
@@ -1159,6 +1160,8 @@ class InvoiceListView(View):
 
         for invoice in invoices:
             awb = invoice.awb
+            old_status = invoice.status  # Store the old status before changing it
+            
             if update_status_for_invoices == 'paid':
                 invoice.status = 'paid'
                 invoice.invoice_detail = update_detail_for_invoice
@@ -1197,6 +1200,22 @@ class InvoiceListView(View):
                     activity_type='UPDATE',
                     description=f'Marked invoice as credited for Invoice ID: {invoice.id}, AWB: {awb.awb}'
                 )
+            
+            # Create an InvoiceHistory entry
+            InvoiceHistory.objects.create(
+                invoice_id=invoice.id,
+                awb=invoice.awb.awb,
+                customer=invoice.customer,
+                pcs=invoice.awb.awb_pcs,
+                weight_kg=invoice.awb.awb_kg,
+                origin=invoice.awb.awb_type,
+                total_amount_tzs=invoice.total_amount_tzs,
+                status=old_status,  # Store the old status in history
+                action=f'{old_status} -> {invoice.status}',  # Record the status change
+                performed_by=request.user,
+                note=f'Invoice status changed from {old_status} to {invoice.status}'
+            )
+
             awb.save()
             invoice.save()
 
@@ -1662,7 +1681,12 @@ def generate_invoice_pdf(request, invoice_id):
         activity_type='READ',
         description=f'Generated PDF for Invoice ID: {invoice.id}'
     )
-    return HttpResponse(buffer, content_type='application/pdf')
+
+    # Set the response to download the file
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice_{invoice.id}.pdf"'
+    return response
+
 
 @login_required
 def invoice_generation(request):
@@ -2281,6 +2305,7 @@ def activity_log_list(request):
 def trash_view(request):
     trashed_invoices = Invoice.objects.filter(deleted=True)
     trashed_awbs = Masterawb.objects.filter(deleted=True)
+    print(trashed_invoices)
     context = {
         'trashed_invoices': trashed_invoices,
         'trashed_awbs': trashed_awbs,
@@ -2311,19 +2336,27 @@ def restore_invoice(request, id):
     messages.success(request, f'Invoice {invoice.customer} restored successfully')
     return redirect('trash')
 
+
+
+
 @login_required
 def permanently_delete_invoice(request, id):
-    invoice = get_object_or_404(Invoice, pk=id)
-    invoice_id = invoice.id
-    invoice.delete()
+    if request.method == 'DELETE' and request.is_ajax():
+        try:
+            invoice = Invoice.objects.get(pk=id)
+            invoice_id = invoice.id
+            invoice.delete()
 
-    ActivityLog.objects.create(
-        user=request.user,
-        activity_type='DELETE',
-        description=f'Permanently deleted Invoice ID: {invoice_id}'
-    )
-    messages.success(request, f'Invoice {invoice_id} permanently deleted')
-    return redirect('trash')
+            ActivityLog.objects.create(
+                user=request.user,
+                activity_type='DELETE',
+                description=f'Permanently deleted Invoice ID: {invoice_id}'
+            )
+            return JsonResponse({'message': 'Invoice permanently deleted.'}, status=200)
+        except Invoice.DoesNotExist:
+            return JsonResponse({'error': 'Invoice does not exist.'}, status=404)
+    return JsonResponse({'error': 'Invalid request.'}, status=400)
+
 
 
 
@@ -2465,3 +2498,78 @@ def awb_history(request):
         'awb_number': awb_number,
     })
 
+
+
+class InvoiceHistoryView(ListView):
+    model = InvoiceHistory
+    template_name = 'system/history/invoice_history.html'
+    context_object_name = 'invoice_histories'
+    paginate_by = 10
+    ordering = ['-performed_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                models.Q(invoice_id__icontains=search_query) |
+                models.Q(awb__icontains=search_query) |
+                models.Q(customer__icontains=search_query)
+            )
+        return queryset
+
+
+
+
+
+@login_required
+def permanently_delete_invoice(request, id):
+    invoice = get_object_or_404(Invoice, pk=id)
+    invoice_id = invoice.id
+    
+    # Save to invoice history before deleting
+    InvoiceHistory.objects.create(
+        invoice_id=invoice.id,
+        awb=invoice.awb.awb,
+        customer=invoice.customer,
+        pcs=invoice.awb.awb_pcs,
+        weight_kg=invoice.awb.awb_kg,
+        origin=invoice.awb.awb_type,
+        total_amount_tzs=invoice.total_amount_tzs,
+        status=invoice.status,
+        action='deleted',
+        performed_by=request.user,
+        note='Invoice permanently deleted'
+    )
+
+    invoice.delete()
+
+    ActivityLog.objects.create(
+        user=request.user,
+        activity_type='DELETE',
+        description=f'Permanently deleted Invoice ID: {invoice_id}'
+    )
+    messages.success(request, f'Invoice {invoice_id} permanently deleted')
+    return redirect('trash')
+
+
+def edit_invoice_logic(invoice, update_detail_for_invoice, update_status_for_invoices, user):
+    # Store the original data in history before editing
+    InvoiceHistory.objects.create(
+        invoice_id=invoice.id,
+        awb=invoice.awb.awb,
+        customer=invoice.customer,
+        pcs=invoice.awb.awb_pcs,
+        weight_kg=invoice.awb.awb_kg,
+        origin=invoice.awb.awb_type,
+        total_amount_tzs=invoice.total_amount_tzs,
+        status=invoice.status,
+        action='edited',
+        performed_by=user,
+        note='Invoice edited'
+    )
+    
+    # Proceed with the edit logic
+    invoice.status = update_status_for_invoices
+    invoice.invoice_detail = update_detail_for_invoice
+    invoice.save()
