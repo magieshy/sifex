@@ -2305,7 +2305,6 @@ def activity_log_list(request):
 def trash_view(request):
     trashed_invoices = Invoice.objects.filter(deleted=True)
     trashed_awbs = Masterawb.objects.filter(deleted=True)
-    print(trashed_invoices)
     context = {
         'trashed_invoices': trashed_invoices,
         'trashed_awbs': trashed_awbs,
