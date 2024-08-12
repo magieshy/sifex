@@ -125,7 +125,8 @@ urlpatterns = [
 
     path('trash/', trash_view, name='trash'),
     path('restore-invoice/<int:id>/', restore_invoice, name='restore_invoice'),
-    path('delete-invoice/<int:id>/', permanently_delete_invoice, name='permanently_delete_invoice'),
+    # path('delete-invoice/<int:id>/', permanently_delete_invoice, name='permanently_delete_invoice'),
+    path('delete-invoice/permanently/<int:id>/', permanently_delete_invoice, name='delete-permanently-invoice'),
     path('restore-awb/<int:id>/', restore_awb, name='restore_awb'),
     path('delete-awb/<int:id>/', permanently_delete_awb, name='permanently_delete_awb'),
 
@@ -139,6 +140,9 @@ urlpatterns = [
     path('users/activate/<int:user_id>/', activate_user, name='activate_user'),
     path('users/deactivate/<int:user_id>/', deactivate_user, name='deactivate_user'),
     path('users/reset_password/<int:user_id>/', reset_password, name='reset_password'),
+
+
+    path('invoice-history/', InvoiceHistoryView.as_view(), name='invoice-history'),
 
 
 
