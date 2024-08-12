@@ -1122,7 +1122,7 @@ def invoice_detail(request, invoice_id):
 
 class InvoiceListView(View):
     def get(self, *args, **kwargs):
-        invoices = Invoice.objects.filter(deleted=False)
+        invoices = Invoice.objects.filter(deleted=False).order_by('-date')
         ActivityLog.objects.create(
             user=self.request.user,
             activity_type='READ',
@@ -1413,72 +1413,110 @@ def delete_invoice(request, id):
 
 @login_required
 def awb_edit(request, pk):
+    master_awb = Masterawb.objects.get(id=pk)
+    
     if request.method == 'POST':
-        master_awb = Masterawb.objects.get(id=pk)
-        awb = request.POST.get('awb')
-        order_number = request.POST.get('order_number')
-        sender_name = request.POST.get('sender_name')
-        sender_address = request.POST.get('sender_address')
-        sender_city = request.POST.get('sender_city')
-        sender_tel = request.POST.get('sender_tel')
-        sender_country = request.POST.get('sender_country')
-        receiver_name = request.POST.get('receiver_name')
-        receiver_address = request.POST.get('receiver_address')
-        receiver_tel = request.POST.get('receiver_tel')
-        receiver_city = request.POST.get('receiver_city')
-        receiver_country = request.POST.get('receiver_country')
-        desc = request.POST.get('desc')
-        freight = request.POST.get('freight')
-        insurance = request.POST.get('insurance')
-        awb_pcs = request.POST.get('awb_pcs')
-        awb_kg = request.POST.get('awb_kg')
-        chargable_weight = request.POST.get('chargable_weight')
-        terms = request.POST.get('terms')
-        volume = request.POST.get('volume')
-        height = request.POST.get('height')
-        width = request.POST.get('width')
-        length = request.POST.get('length')
-        currency = request.POST.get('currency')
-        date_received = request.POST.get('date_received')
-        expected_arrival_date = request.POST.get('expected_arrival_date')
-        custom_value = request.POST.get('custom_value')
-        payment_mode = request.POST.get('payment_mode')
-        awb_type = request.POST.get('awb_type')
+        # Store old values
+        old_values = {
+            'awb': master_awb.awb,
+            'order_number': master_awb.order_number,
+            'sender_name': master_awb.sender_name,
+            'sender_address': master_awb.sender_address,
+            'sender_city': master_awb.sender_city,
+            'sender_tel': master_awb.sender_tel,
+            'sender_country': master_awb.sender_country,
+            'receiver_name': master_awb.receiver_name,
+            'receiver_address': master_awb.receiver_address,
+            'receiver_tel': master_awb.receiver_tel,
+            'receiver_city': master_awb.receiver_city,
+            'receiver_country': master_awb.receiver_country,
+            'desc': master_awb.desc,
+            'freight': master_awb.freight,
+            'insurance': master_awb.insurance,
+            'awb_pcs': master_awb.awb_pcs,
+            'awb_kg': master_awb.awb_kg,
+            'chargable_weight': master_awb.chargable_weight,
+            'terms': master_awb.terms,
+            'volume': master_awb.volume,
+            'height': master_awb.height,
+            'width': master_awb.width,
+            'length': master_awb.length,
+            'currency': master_awb.currency,
+            'date_received': master_awb.date_received,
+            'expected_arrival_date': master_awb.expected_arrival_date,
+            'custom_value': master_awb.custom_value,
+            'payment_mode': master_awb.payment_mode,
+            'awb_type': master_awb.awb_type,
+        }
 
-        master_awb.awb = awb
-        master_awb.awb_type = awb_type
-        master_awb.order_number = order_number
-        master_awb.sender_name = sender_name
-        master_awb.sender_address = sender_address
-        master_awb.sender_tel = sender_tel
-        master_awb.sender_country = sender_country
-        master_awb.sender_city = sender_city
-        master_awb.receiver_name = receiver_name
-        master_awb.receiver_country = receiver_country
-        master_awb.receiver_city = receiver_city
-        master_awb.receiver_tel = receiver_tel
-        master_awb.currency = currency
-        master_awb.date_received = date_received
-        master_awb.expected_arrival_date = expected_arrival_date
-        master_awb.desc = desc
-        master_awb.freight = freight
-        master_awb.insurance = insurance
-        master_awb.awb_kg = awb_kg
-        master_awb.awb_pcs = awb_pcs
-        master_awb.chargable_weight = chargable_weight
-        master_awb.terms = terms
-        master_awb.height = height
-        master_awb.width = width
-        master_awb.length = length
-        master_awb.volume = volume
-        master_awb.payment_mode = payment_mode
-        master_awb.save()
-        ActivityLog.objects.create(
-            user=request.user,
-            activity_type='UPDATE',
-            description=f'Edited MasterAWB ID: {master_awb.id}, AWB: {master_awb.awb}'
-        )
+        # Store new values
+        new_values = {
+            'awb': request.POST.get('awb'),
+            'order_number': request.POST.get('order_number'),
+            'sender_name': request.POST.get('sender_name'),
+            'sender_address': request.POST.get('sender_address'),
+            'sender_city': request.POST.get('sender_city'),
+            'sender_tel': request.POST.get('sender_tel'),
+            'sender_country': request.POST.get('sender_country'),
+            'receiver_name': request.POST.get('receiver_name'),
+            'receiver_address': request.POST.get('receiver_address'),
+            'receiver_tel': request.POST.get('receiver_tel'),
+            'receiver_city': request.POST.get('receiver_city'),
+            'receiver_country': request.POST.get('receiver_country'),
+            'desc': request.POST.get('desc'),
+            'freight': request.POST.get('freight'),
+            'insurance': request.POST.get('insurance'),
+            'awb_pcs': request.POST.get('awb_pcs'),
+            'awb_kg': request.POST.get('awb_kg'),
+            'chargable_weight': request.POST.get('chargable_weight'),
+            'terms': request.POST.get('terms'),
+            'volume': request.POST.get('volume'),
+            'height': request.POST.get('height'),
+            'width': request.POST.get('width'),
+            'length': request.POST.get('length'),
+            'currency': request.POST.get('currency'),
+            'date_received': request.POST.get('date_received'),
+            'expected_arrival_date': request.POST.get('expected_arrival_date'),
+            'custom_value': request.POST.get('custom_value'),
+            'payment_mode': request.POST.get('payment_mode'),
+            'awb_type': request.POST.get('awb_type'),
+        }
+
+        # Update the Masterawb instance
+        changes = []
+        for field, new_value in new_values.items():
+            old_value = old_values[field]
+            if old_value != new_value:
+                setattr(master_awb, field, new_value)
+                changes.append(f"Field '{field}' changed from '{old_value}' to '{new_value}'")
+
+        # Check for changes and save
+        if changes:
+            change_summary = "\n".join(changes)
+            remark = request.POST.get('remark')
+
+            if not remark:
+                # Return error if no remark is provided
+                return render(request, 'system/parcels/importer/view.html', {
+                    'form': MasterForm(instance=master_awb),
+                    'master_awb': master_awb,
+                    'error': 'You must provide a remark for the changes.',
+                })
+
+            # Save the changes and log the history
+            master_awb.save()
+            AwbHistory.objects.create(
+                master_awb=master_awb,
+                changed_by=request.user,
+                change_summary=change_summary,
+                remark=remark
+            )
+
         return redirect('parcel_view', master_awb.id)
+
+
+    
+
 
 @login_required
 def generate_invoice_pdf(request, invoice_id):
@@ -1705,48 +1743,85 @@ def customer_list(request):
 
 @login_required
 def delivered_report(request):
-    pcs = []
-    if request.method == "POST":
+    pcs = None
+    total_undelivered = 0
+    total_kg = 0
+
+    if request.method == 'POST':
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        pcs = Masterawb.objects.filter(deleted=False, date_received__gte=date_from, date_received__lte=date_to, delivered=True)
-        ActivityLog.objects.create(
-            user=request.user,
-            activity_type='READ',
-            description=f'Viewed delivered report from {date_from} to {date_to}'
+
+        # Filter for undelivered pcs within the date range
+        pcs = Masterawb.objects.filter(
+            deleted=False,
+            delivered=True,
+            date_received__range=[date_from, date_to]
         )
-    context = {'pcs': pcs}
-    return render(request, 'system/reports/dlv-reports.html', context)
+
+        total_undelivered = pcs.count()  # Total undelivered AWBs
+        total_kg = pcs.aggregate(Sum('awb_kg'))['awb_kg__sum'] or 0  # Total kg of undelivered AWBs
+
+    return render(request, 'system/reports/dlv-reports.html', {
+        'pcs': pcs,
+        'total_undelivered': total_undelivered,
+        'total_kg': total_kg,
+    })
+
 
 @login_required
 def undelivered_report(request):
-    pcs = []
-    if request.method == "POST":
+    pcs = None
+    total_undelivered = 0
+    total_kg = 0
+
+    if request.method == 'POST':
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        pcs = Masterawb.objects.filter(deleted=False, date_received__gte=date_from, date_received__lte=date_to, delivered=False)
-        ActivityLog.objects.create(
-            user=request.user,
-            activity_type='READ',
-            description=f'Viewed undelivered report from {date_from} to {date_to}'
+
+        # Filter for undelivered pcs within the date range
+        pcs = Masterawb.objects.filter(
+            delivered=False,
+            date_received__range=[date_from, date_to]
         )
-    context = {'pcs': pcs}
-    return render(request, 'system/reports/undlv-reports.html', context)
+
+        total_undelivered = pcs.count()  # Total undelivered AWBs
+        total_kg = pcs.aggregate(Sum('awb_kg'))['awb_kg__sum'] or 0  # Total kg of undelivered AWBs
+
+    return render(request, 'system/reports/undlv-reports.html', {
+        'pcs': pcs,
+        'total_undelivered': total_undelivered,
+        'total_kg': total_kg,
+    })
+
+
 
 @login_required
 def paid_report(request):
     invoices = []
+    total_invoices = 0
+    total_amount_tzs = 0
+
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
         invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='paid')
+        
+        total_invoices = invoices.count()
+        total_amount_tzs = invoices.aggregate(total=Sum('total_amount_tzs'))['total'] or 0
+
         ActivityLog.objects.create(
             user=request.user,
             activity_type='READ',
             description=f'Viewed paid report from {date_from} to {date_to}'
         )
-    context = {'invoices': invoices}
+    
+    context = {
+        'invoices': invoices,
+        'total_invoices': total_invoices,
+        'total_amount_tzs': total_amount_tzs,
+    }
     return render(request, 'system/reports/paid-reports.html', context)
+
 
 @login_required
 def credited_report(request):
@@ -1766,17 +1841,66 @@ def credited_report(request):
 @login_required
 def unpaid_report(request):
     invoices = []
+    total_invoices = 0
+    total_amount_usd = 0
+    total_amount_tzs = 0
+
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
         invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='unpaid')
+        
+        total_invoices = invoices.count()
+        total_amount_usd = invoices.aggregate(total_usd=Sum('total_amount_usd'))['total_usd'] or 0
+        total_amount_tzs = invoices.aggregate(total_tzs=Sum('total_amount_tzs'))['total_tzs'] or 0
+
         ActivityLog.objects.create(
             user=request.user,
             activity_type='READ',
             description=f'Viewed unpaid report from {date_from} to {date_to}'
         )
-    context = {'invoices': invoices}
+    
+    context = {
+        'invoices': invoices,
+        'total_invoices': total_invoices,
+        'total_amount_usd': total_amount_usd,
+        'total_amount_tzs': total_amount_tzs,
+    }
     return render(request, 'system/reports/unpaid-reports.html', context)
+
+
+
+
+@login_required
+def credited_report(request):
+    invoices = []
+    total_invoices = 0
+    total_amount_usd = 0
+    total_amount_tzs = 0
+
+    if request.method == "POST":
+        date_from = request.POST.get('date_from')
+        date_to = request.POST.get('date_to')
+        invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='credited')
+        
+        total_invoices = invoices.count()
+        total_amount_usd = invoices.aggregate(total_usd=Sum('total_amount_usd'))['total_usd'] or 0
+        total_amount_tzs = invoices.aggregate(total_tzs=Sum('total_amount_tzs'))['total_tzs'] or 0
+
+        ActivityLog.objects.create(
+            user=request.user,
+            activity_type='READ',
+            description=f'Viewed credited report from {date_from} to {date_to}'
+        )
+    
+    context = {
+        'invoices': invoices,
+        'total_invoices': total_invoices,
+        'total_amount_usd': total_amount_usd,
+        'total_amount_tzs': total_amount_tzs,
+    }
+    return render(request, 'system/reports/credited-reports.html', context)
+
 
 @login_required
 def check_staff(request):
@@ -2292,3 +2416,35 @@ def reset_password(request, user_id):
     else:
         form = PasswordResetForm()
     return render(request, 'system/users/reset_password.html', {'form': form, 'user': user})
+
+
+
+
+@login_required
+def awb_history(request):
+    history = None
+    master_awb = None
+    awb_number = request.GET.get('awb', None)  # Get AWB from query parameters
+
+    if awb_number:
+        master_awb = get_object_or_404(Masterawb, awb=awb_number)
+        history = master_awb.history.all().order_by('-changed_at')  # Order by newest first
+
+    # Handle AJAX request for a specific history item
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        history_id = request.GET.get('history_id')
+        if history_id:
+            history_item = get_object_or_404(AwbHistory, id=history_id)
+            return JsonResponse({
+                'changed_at': history_item.changed_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'changed_by': history_item.changed_by.username if history_item.changed_by else 'Unknown',
+                'change_summary': history_item.change_summary,
+                'remark': history_item.remark,  # Include remark in the response
+            })
+
+    return render(request, 'system/history/awb_history.html', {
+        'history': history,
+        'master_awb': master_awb,
+        'awb_number': awb_number,
+    })
+
