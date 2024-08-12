@@ -14,4 +14,5 @@ admin.site.register(AwbLocation)
 admin.site.register(Attendance)
 admin.site.register(ActivityLog)
 admin.site.register(AwbHistory)
+admin.site.register(InvoiceHistory)
 
