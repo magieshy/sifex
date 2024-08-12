@@ -3,8 +3,8 @@
 {% load widget_tweaks %}
 {% block title %}Delivered Report{% endblock %}
 
-{% block page %}Delivered Report{% endblock page %}
-{% block slogan %}Delivered Report{% endblock slogan %}
+{% block page %}Delivered Report{% endblock %}
+{% block slogan %}Delivered Report{% endblock %}
 
 {% block style %}
 <style>
@@ -102,10 +102,13 @@
         </div>
     </header>
     
-
     {% if pcs %}
     <div class="card-content">
         <div class="content table-responsive">
+            <div class="mb-4">
+                <h4>Total Delivered AWBs: {{ total_delivered }}</h4>
+                <h4>Total Weight (KG) of Delivered AWBs: {{ total_kg }}</h4>
+            </div>
             <button onclick="window.print()" class="btn btn-primary mb-3">Print Report</button>
             <table class="table datanew is-fullwidth is-bordered is-hoverable is-striped">
                 <thead>
@@ -145,7 +148,6 @@
                             </a>
                         </td>
                     </tr>
-                   
                     {% endfor %}
                 </tbody>
             </table>
@@ -162,20 +164,21 @@
             <div class="row">
                 <div class="col-md-4 col-sm-4 col-4">
                     <div class="form-group">
-                        <label for="">Date From</label>
+                        <label for="id_date_from">Date From</label>
                         <input required type="date" placeholder="Choose Date" name="date_from" id="id_date_from" class="form-control">
                     </div>
                 </div>
                 <div class="col-md-4 col-sm-4 col-4">
                     <div class="form-group">
-                        <label for="">Date To</label>
+                        <label for="id_date_to">Date To</label>
                         <input required type="date" placeholder="Choose Date" name="date_to" id="id_date_to" class="form-control">
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12 col-sm-12 col-12">
-                    <button type="submit" class="btn btn-primary btn-block">Get Report</button>
+                <div class="col-md-4 col-sm-4 col-4">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn-primary btn-block">Get Report</button>
+                    </div>
                 </div>
             </div>
         </form>
