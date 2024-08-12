@@ -7,6 +7,8 @@ from django.views import View
 from django.http import HttpResponse
 # from django.contrib.auth.models import User
 from django.db.models import Q
+from django.utils.timezone import now as timezone_now
+from django.db.models import F
 from accounts.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -1120,17 +1122,31 @@ def invoice_detail(request, invoice_id):
         )
         return HttpResponseNotFound("Invoice not found")
 
+
+
 class InvoiceListView(View):
-    def get(self, *args, **kwargs):
-        invoices = Invoice.objects.filter(deleted=False).order_by('-date')
+    def get(self, request, *args, **kwargs):
+        sort_by = request.GET.get('sort_by', 'id')
+        sort_order = request.GET.get('order', 'asc')
+        
+        # Determine the sorting order
+        if sort_order == 'desc':
+            sort_by = f'-{sort_by}'
+        
+        invoices = Invoice.objects.filter(deleted=False).order_by(sort_by)
+        
         ActivityLog.objects.create(
             user=self.request.user,
             activity_type='READ',
             description='Viewed list of invoices'
         )
+        
         context = {
             "invoices": invoices,
+            "sort_by": request.GET.get('sort_by', 'id'),
+            "sort_order": sort_order,
         }
+        
         return render(self.request, 'invoice/invoice-list.html', context)
 
     def post(self, request):
@@ -1185,6 +1201,7 @@ class InvoiceListView(View):
             invoice.save()
 
         return redirect('invoice-list')
+
 
 @login_required
 def createInvoice(request, pk):
