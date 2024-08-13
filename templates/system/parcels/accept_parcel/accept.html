@@ -141,7 +141,7 @@
                         </div>
                         <div class="col-md-4 col-lg-4 col-sm-12 col-12">
                             <label for="freight">freight</label>
-                            {% render_field form.freight class+="form-control" %}
+                            <input type="text" class="form-control" id="id_freight" disabled>
                         </div>
                         <div class="col-md-4 col-lg-4 col-sm-12 col-12">
                             <label for="insurance">insurance</label>
@@ -730,5 +730,43 @@
     }
 
     document.getElementById('request-key').addEventListener("click", getParcelKeys);
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const awbTypeField = document.getElementById('id_awb_type');
+    const freightField = document.getElementById('id_freight');
+
+    awbTypeField.addEventListener('change', function () {
+        const awbType = this.value;
+        if (awbType) {
+            fetch(`/sifex/get-freight-by-awb-type/?awb_type=${encodeURIComponent(awbType)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.freights) {
+                        // Populate the freight field with the fetched rate
+                        freightField.value = data.freights[0].rate; // Use the first rate if there are multiple
+                    } else if (data.error) {
+                        console.error(data.error);
+                    } else {
+                        alert("No freights found for the selected AWB type.");
+                        freightField.value = ''; // Clear the field if no data is found
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching freights:", error);
+                    freightField.value = ''; // Clear the field if an error occurs
+                });
+        } else {
+            freightField.value = ''; // Clear the field if no awbType is selected
+        }
+    });
+});
+
 </script>
 {% endblock %}
