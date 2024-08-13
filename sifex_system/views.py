@@ -1,4 +1,5 @@
 from django.utils.dateparse import parse_date
+from django.conf.urls import handler403, handler404
 import logging
 from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.views.generic import ListView
@@ -1872,6 +1873,35 @@ def paid_report(request):
 
 
 @login_required
+def freight_report(request):
+    if not request.user.management:
+        return HttpResponseForbidden("You do not have permission to access this page.")
+    
+    pcs = None
+    total_freight = 0
+    total_chargable_weight = 0
+
+    if request.method == 'POST':
+        date_from = request.POST.get('date_from')
+        date_to = request.POST.get('date_to')
+
+        # Filter AWBs within the date range
+        pcs = Masterawb.objects.filter(
+            date_received__range=[date_from, date_to]
+        )
+
+        total_freight = pcs.aggregate(Sum('freight'))['freight__sum'] or 0  # Total freight
+        total_chargable_weight = pcs.aggregate(Sum('chargable_weight'))['chargable_weight__sum'] or 0  # Total chargable weight
+
+    return render(request, 'system/reports/freight-reports.html', {
+        'pcs': pcs,
+        'total_freight': total_freight,
+        'total_chargable_weight': total_chargable_weight,
+    })
+
+
+
+@login_required
 def credited_report(request):
     invoices = []
     if request.method == "POST":
@@ -2608,6 +2638,7 @@ def get_freight_by_awb(request):
 
 
 
+
 @login_required
 def freight_list(request):
     if not request.user.management:
@@ -2679,3 +2710,16 @@ def update_freight(request, pk):
         form = FreightForm(instance=freight)
     
     return render(request, 'system/freight/update_freight.html', {'form': form, 'freight': freight})
+
+
+
+
+# Custom error handlers
+def custom_403_view(request, exception=None):
+    return render(request, 'errors/403.html', status=403)
+
+def custom_404_view(request, exception=None):
+    return render(request, 'errors/404.html', status=404)
+
+handler403 = custom_403_view
+handler404 = custom_404_view
