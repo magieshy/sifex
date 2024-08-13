@@ -15,4 +15,6 @@ admin.site.register(Attendance)
 admin.site.register(ActivityLog)
 admin.site.register(AwbHistory)
 admin.site.register(InvoiceHistory)
+admin.site.register(Freight)
+admin.site.register(FreightHistory)
 
