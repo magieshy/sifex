@@ -111,6 +111,7 @@ urlpatterns = [
     path('paid_report', paid_report, name="paid_report"),
     path('unpaid_report', unpaid_report, name="unpaid_report"),
     path('credited_report', credited_report, name="credited_report"),
+    path('freight_report', freight_report, name="freight_report"),
 
 
     # ATTENDANCE APP
