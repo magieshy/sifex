@@ -94,11 +94,8 @@
         </div>
         <div class="col-md-4">
             {% include 'system/partials/_messages.html' %}
-            <div class="card">
-                {% for obj in prefrecence %}
-                <a href="{% url 'preference' obj.id %}" class="btn">preference settings</a>
-                {% endfor %}
-            </div>
+            <div class="card"><a href="{% url 'rate_list' %}" class="btn">Rate Settings</a></div>
+            <div class="card"><a href="{% url 'freight_list' %}" class="btn">Freight Settings</a></div>
         </div>
     </div>
 </div>
