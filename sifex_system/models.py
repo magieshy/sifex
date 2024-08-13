@@ -36,6 +36,7 @@ STATION_CHOICES = (
     ('MCT - Muscat', 'MCT - Muscat'),
     ('BOM - Mumbai', 'BOM - Mumbai'),
     ('ADD - Addis Ababa', 'ADD - Addis Ababa'),
+    ('ZNZ - Zanzibar', 'ZNZ - Zanzibar'),
     
 )
 
@@ -347,6 +348,32 @@ class InvoiceHistory(models.Model):
     def __str__(self):
         return f"Invoice {self.invoice_id} ({self.action})"
 
+
+
+
+
+
+class Freight(models.Model):
+    freight_rete = models.CharField(max_length=250, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    awb_type = models.CharField(max_length=255, choices=TYPE_CHOICES, null=True)
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+
+
+    def __str__(self):
+        return f"{self.awb_type} -> {self.freight_rete} by {self.performed_by.username} at {self.created_at}"
+
+
+
+
+class FreightHistory(models.Model):
+    freight = models.ForeignKey(Freight, on_delete=models.CASCADE)
+    action = models.CharField(max_length=50, choices=[('deleted', 'Deleted')])
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    performed_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.freight.freight_rete} - {self.action} by {self.performed_by.username} at {self.performed_at}"
 
 
 
