@@ -4,7 +4,7 @@ from sifex_system.models import Masterawb, Slaveawb, Customer
 from django.contrib.auth.forms import PasswordChangeForm
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Invoice
+from .models import *
 # from django.contrib.auth.models import User
 from accounts.models import User
 class DateInput(forms.DateInput):
@@ -264,4 +264,14 @@ class CustomerForm(ModelForm):
         model = Customer 
         fields = ['name', ]
 
+
+
+class FreightForm(forms.ModelForm):
+    class Meta:
+        model = Freight
+        fields = ['freight_rete', 'awb_type']
+        widgets = {
+            'freight_rete': forms.TextInput(attrs={'class': 'form-control'}),
+            'awb_type': forms.Select(attrs={'class': 'form-control'}),
+        }
 
