@@ -21,7 +21,6 @@
     }
 
     @media print {
-        /* Hide the entire page except for the card */
         body * {
             visibility: hidden;
         }
@@ -58,33 +57,31 @@
             align-items: center;
         }
 
-        /* Specific classes to hide title and URL */
         .no-print-title, .no-print-url {
             display: none;
         }
 
-        /* Additional CSS to hide the default title and URL */
         @page {
             size: A4;
-            margin: 0; /* Remove the default margins */
+            margin: 0;
         }
         body {
-            margin: 0; /* Remove the body margin */
+            margin: 0;
         }
         .card {
-            margin: 0; /* Remove the card margin */
-            box-shadow: none; /* Remove any shadow */
+            margin: 0;
+            box-shadow: none;
             width: auto;
         }
 
         .table {
             width: 100%;
-            table-layout: auto; /* Adjust to content */
-            font-size: 10px; /* Smaller font size */
+            table-layout: auto;
+            font-size: 10px;
         }
         .table th, .table td {
-            padding: 4px; /* Reduced padding */
-            word-wrap: break-word; /* Allow breaking long words */
+            padding: 4px;
+            word-wrap: break-word;
         }
     }
 </style>
@@ -107,7 +104,8 @@
         <div class="content table-responsive">
             <div class="mb-4">
                 <h4>Total Undelivered AWBs: {{ total_undelivered }}</h4>
-                <h4>Total Weight (KG) of Undelivered AWBs: {{ total_kg }}</h4>
+                <h4>Total Weight (KG): {{ total_kg }}</h4>
+                <h4>Total Freight: {{ total_freight }}</h4> <!-- Display the total freight -->
             </div>
             <button onclick="window.print()" class="btn btn-primary mb-3">Print Report</button>
             <table class="table datanew is-fullwidth is-bordered is-hoverable is-striped">
