@@ -11,8 +11,8 @@ from django.views.decorators.http import require_http_methods
 # from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.timezone import now as timezone_now
-from django.db.models import Sum, F, FloatField
-from django.db.models.functions import Cast
+from django.db.models import Sum, F, FloatField, Value
+from django.db.models.functions import Cast, Replace
 from accounts.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -1890,11 +1890,17 @@ def freight_report(request):
             date_received__range=[date_from, date_to]
         )
 
-        # Cast the 'freight' field to Float and sum it up
-        total_freight = pcs.aggregate(total_freight=Sum(Cast('freight', FloatField())))['total_freight'] or 0
+        # Replace '$' with an empty string in the 'freight' field and cast it to Float for summation
+        pcs = pcs.annotate(
+            cleaned_freight=Cast(Replace('freight', Value('$'), Value('')), FloatField()),
+            cleaned_chargable_weight=Cast('chargable_weight', FloatField())  # Cast chargable_weight to Float
+        )
 
-        # Sum the 'chargable_weight' field
-        total_chargable_weight = pcs.aggregate(Sum('chargable_weight'))['chargable_weight__sum'] or 0
+        # Sum the cleaned 'freight' field
+        total_freight = pcs.aggregate(total_freight=Sum('cleaned_freight'))['total_freight'] or 0
+
+        # Sum the cleaned 'chargable_weight' field
+        total_chargable_weight = pcs.aggregate(total_chargable_weight=Sum('cleaned_chargable_weight'))['total_chargable_weight'] or 0
 
     return render(request, 'system/reports/freight-reports.html', {
         'pcs': pcs,
