@@ -28,6 +28,7 @@ urlpatterns = [
     path('awb-history/', awb_history, name='awb_history'),
 
     path('accept_console/', accept_console, name="accept_console"),
+    path('get-freight-by-awb-type/', get_freight_by_awb, name='get_freight_by_awb_type'),
     path('accept_loaded_console/', accept_loaded_console, name="accept_loaded_console"),
     path('accept_manifested_console/', accept_manifested_console, name="accept_manifested_console"),
     path('parcel_import/', parcel_import, name="parcel_import"),
@@ -143,6 +144,15 @@ urlpatterns = [
 
 
     path('invoice-history/', InvoiceHistoryView.as_view(), name='invoice-history'),
+
+
+
+    # freight zone
+    path('freights/', freight_list, name='freight_list'),
+    path('preferences/', rate_list, name='rate_list'),
+    path('freights/new/', create_freight, name='create_freight'),
+    path('freights/edit/<int:pk>/', update_freight, name='update_freight'),
+    path('delete-freight/<int:freight_id>/', delete_freight, name='delete_freight'),
 
 
 
