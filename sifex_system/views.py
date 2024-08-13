@@ -11,7 +11,8 @@ from django.views.decorators.http import require_http_methods
 # from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.timezone import now as timezone_now
-from django.db.models import F
+from django.db.models import Sum, F, FloatField
+from django.db.models.functions import Cast
 from accounts.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -21,7 +22,6 @@ from accounts.decorators import *
 from sifex_system.forms import PasswordChangingForm
 from sifex_system.models import *
 from sifex_system.forms import *
-from django.db.models import Sum
 import datetime
 from django.utils.timezone import now as timezone_now
 from core.models import *
@@ -1890,14 +1890,18 @@ def freight_report(request):
             date_received__range=[date_from, date_to]
         )
 
-        total_freight = pcs.aggregate(Sum('freight'))['freight__sum'] or 0  # Total freight
-        total_chargable_weight = pcs.aggregate(Sum('chargable_weight'))['chargable_weight__sum'] or 0  # Total chargable weight
+        # Cast the 'freight' field to Float and sum it up
+        total_freight = pcs.aggregate(total_freight=Sum(Cast('freight', FloatField())))['total_freight'] or 0
+
+        # Sum the 'chargable_weight' field
+        total_chargable_weight = pcs.aggregate(Sum('chargable_weight'))['chargable_weight__sum'] or 0
 
     return render(request, 'system/reports/freight-reports.html', {
         'pcs': pcs,
         'total_freight': total_freight,
         'total_chargable_weight': total_chargable_weight,
     })
+
 
 
 
