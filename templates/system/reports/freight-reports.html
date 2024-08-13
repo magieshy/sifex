@@ -106,7 +106,7 @@
     <div class="card-content">
         <div class="content table-responsive">
             <div class="mb-4">
-                <h4>Total Freight: {{ total_freight }}</h4>
+                <h4>Total Freight: ${{ total_freight }}</h4>
                 <h4>Total Chargable Weight: {{ total_chargable_weight }}</h4>
             </div>
             <button onclick="window.print()" class="btn btn-primary mb-3">Print Report</button>
@@ -117,7 +117,7 @@
                         <th style="width: 15%;">Order Number</th>
                         <th style="width: 15%;">Chargable Weight</th>
                         <th style="width: 15%;">Rate</th>
-                        <th style="width: 20%;">Freight</th>
+                        <th style="width: 20%;">Freight (USD)</th>
                         <th style="width: 20%;">AWB Type</th>
                     </tr>
                 </thead>
@@ -128,7 +128,7 @@
                         <td>{{ pc.order_number }}</td>
                         <td>{{ pc.chargable_weight }}</td>
                         <td class="rate-column">Loading...</td>
-                        <td>{{ pc.freight }}</td>
+                        <td>${{ pc.freight }}</td>
                         <td>{{ pc.awb_type }}</td>
                     </tr>
                     {% endfor %}
