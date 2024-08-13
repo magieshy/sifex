@@ -31,7 +31,6 @@
 
 <div class="card">
     <div class="card-body">
-
         <form action="{% url 'awb-edit' master_awb.id %}" enctype="multipart/form-data" method="post">
             {% csrf_token %}
             <div class="row">
@@ -386,6 +385,54 @@ document.addEventListener('DOMContentLoaded', function () {
             alert("You must provide a remark before submitting.");
         }
     });
+
+    // JavaScript for Freight Calculation
+    const awbTypeField = document.getElementById('id_awb_type');
+    const freightField = document.getElementById('id_freight');
+    const chargableWeightField = document.getElementById('id_chargable_weight');
+
+    // Function to calculate freight
+    function calculateFreight(rate, weight) {
+        return (rate * weight).toFixed(2);
+    }
+
+    // Update freight field whenever AWB Type or Chargable Weight changes
+    function updateFreight() {
+        const awbType = awbTypeField.value;
+        const chargableWeight = parseFloat(chargableWeightField.value) || 0;
+        
+        if (awbType) {
+            fetch(`/sifex/get-freight-by-awb-type/?awb_type=${encodeURIComponent(awbType)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.freights && data.freights.length > 0) {
+                    const rate = parseFloat(data.freights[0].rate);
+                    const freight = calculateFreight(rate, chargableWeight);
+                    freightField.value = freight;
+                } else if (data.error) {
+                    console.error(data.error);
+                    freightField.value = 'Error';
+                } else {
+                    console.error("No freights found for the selected AWB type.");
+                    freightField.value = 'N/A';
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching freights:", error);
+                freightField.value = 'Error';
+            });
+        } else {
+            freightField.value = 'N/A'; // Clear the field if no AWB Type is selected
+        }
+    }
+
+    // Event listeners to trigger the freight calculation
+    awbTypeField.addEventListener('change', updateFreight);
+    chargableWeightField.addEventListener('input', updateFreight);
 });
 </script>
 {% endblock %}
