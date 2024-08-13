@@ -6,6 +6,7 @@ from django.contrib.auth.views import PasswordChangeView
 from django.template.loader import get_template
 from django.views import View
 from django.http import HttpResponse
+from django.views.decorators.http import require_http_methods
 # from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils.timezone import now as timezone_now
@@ -1787,25 +1788,28 @@ def delivered_report(request):
     pcs = None
     total_undelivered = 0
     total_kg = 0
+    total_freight = 0  # Initialize total freight
 
     if request.method == 'POST':
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
 
-        # Filter for undelivered pcs within the date range
+        # Filter for delivered pcs within the date range
         pcs = Masterawb.objects.filter(
             deleted=False,
             delivered=True,
             date_received__range=[date_from, date_to]
         )
 
-        total_undelivered = pcs.count()  # Total undelivered AWBs
-        total_kg = pcs.aggregate(Sum('awb_kg'))['awb_kg__sum'] or 0  # Total kg of undelivered AWBs
+        total_undelivered = pcs.count()  # Total delivered AWBs
+        total_kg = pcs.aggregate(Sum('awb_kg'))['awb_kg__sum'] or 0  # Total kg of delivered AWBs
+        total_freight = pcs.aggregate(Sum('freight'))['freight__sum'] or 0  # Total freight of delivered AWBs
 
     return render(request, 'system/reports/dlv-reports.html', {
         'pcs': pcs,
         'total_undelivered': total_undelivered,
         'total_kg': total_kg,
+        'total_freight': total_freight,  # Pass the total freight to the template
     })
 
 
@@ -1814,6 +1818,7 @@ def undelivered_report(request):
     pcs = None
     total_undelivered = 0
     total_kg = 0
+    total_freight = 0  # Initialize total freight
 
     if request.method == 'POST':
         date_from = request.POST.get('date_from')
@@ -1827,11 +1832,13 @@ def undelivered_report(request):
 
         total_undelivered = pcs.count()  # Total undelivered AWBs
         total_kg = pcs.aggregate(Sum('awb_kg'))['awb_kg__sum'] or 0  # Total kg of undelivered AWBs
+        total_freight = pcs.aggregate(Sum('freight'))['freight__sum'] or 0  # Total freight of undelivered AWBs
 
     return render(request, 'system/reports/undlv-reports.html', {
         'pcs': pcs,
         'total_undelivered': total_undelivered,
         'total_kg': total_kg,
+        'total_freight': total_freight,  # Pass the total freight to the template
     })
 
 
@@ -2572,3 +2579,103 @@ def edit_invoice_logic(invoice, update_detail_for_invoice, update_status_for_inv
     invoice.status = update_status_for_invoices
     invoice.invoice_detail = update_detail_for_invoice
     invoice.save()
+
+
+
+
+
+# FREIGHT MODE
+@login_required
+def get_freight_by_awb(request):
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        awb_type = request.GET.get('awb_type')
+        print(awb_type)
+        if awb_type:
+            try:
+                # Filter Freight records by matching awb_type
+                freights = Freight.objects.filter(awb_type=awb_type)
+                if freights.exists():
+                    freight_data = [{"id": freight.id, "rate": freight.freight_rete} for freight in freights]
+                    print(freight_data)
+                    return JsonResponse({"freights": freight_data})
+                else:
+                    return JsonResponse({"freights": []})
+            except Exception as e:
+                return JsonResponse({"error": str(e)}, status=500)
+        else:
+            return JsonResponse({"error": "awb_type not provided"}, status=400)
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+@login_required
+def freight_list(request):
+    if not request.user.management:
+        return HttpResponseForbidden("You do not have permission to access this page.")
+    
+    freights = Freight.objects.all()
+    return render(request, 'system/freight/freight_list.html', {'freights': freights})
+
+@login_required
+def rate_list(request):
+    if not request.user.management:
+        return HttpResponseForbidden("You do not have permission to access this page.")
+    
+    preferences = SystemPreference.objects.all()
+    return render(request, 'system/settings/rate_list.html', {'preferences': preferences})
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_freight(request, freight_id):
+    if not request.user.management:
+        return HttpResponseForbidden("You do not have permission to perform this action.")
+    
+    freight = get_object_or_404(Freight, id=freight_id)
+
+    try:
+        # Create a history record before deleting the freight
+        FreightHistory.objects.create(
+            freight=freight,
+            action='deleted',
+            performed_by=request.user,
+            performed_at=timezone.now()
+        )
+        freight.delete()
+        return JsonResponse({'success': True}, status=200)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def create_freight(request):
+    if not request.user.management:
+        return HttpResponseForbidden("You do not have permission to perform this action.")
+    
+    if request.method == 'POST':
+        form = FreightForm(request.POST)
+        if form.is_valid():
+            freight = form.save(commit=False)
+            freight.performed_by = request.user  # Set the user who is performing the action
+            freight.save()
+            return redirect('freight_list')
+    else:
+        form = FreightForm()
+    
+    return render(request, 'system/freight/create_freight.html', {'form': form})
+
+@login_required
+def update_freight(request, pk):
+    if not request.user.management:
+        return HttpResponseForbidden("You do not have permission to perform this action.")
+    
+    freight = get_object_or_404(Freight, pk=pk)
+    if request.method == 'POST':
+        form = FreightForm(request.POST, instance=freight)
+        if form.is_valid():
+            freight = form.save(commit=False)
+            freight.performed_by = request.user  # Update the user who is performing the action
+            freight.save()
+            return redirect('freight_list')  # Redirect to the freight list or a success page
+    else:
+        form = FreightForm(instance=freight)
+    
+    return render(request, 'system/freight/update_freight.html', {'form': form, 'freight': freight})
