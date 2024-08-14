@@ -123,11 +123,11 @@
                 </thead>
                 <tbody>
                     {% for pc in pcs %}
-                    <tr class="awb-row" data-awb-type="{{ pc.awb_type }}">
+                    <tr>
                         <td>{{ pc.awb }}</td>
                         <td>{{ pc.order_number }}</td>
                         <td>{{ pc.chargable_weight }}</td>
-                        <td class="rate-column">Loading...</td>
+                        <td>{{ pc.freight_rate }}</td>
                         <td>${{ pc.freight }}</td>
                         <td>{{ pc.awb_type }}</td>
                     </tr>
@@ -187,41 +187,6 @@
         flatpickr("#id_date_to", {
             dateFormat: "Y-m-d",
             allowInput: true
-        });
-    });
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const rows = document.querySelectorAll('.awb-row');
-        
-        rows.forEach(row => {
-            const awbType = row.dataset.awbType;
-            const rateColumn = row.querySelector('.rate-column');
-            
-            if (awbType) {
-                fetch(`/sifex/get-freight-by-awb-type/?awb_type=${encodeURIComponent(awbType)}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.freights && data.freights.length > 0) {
-                        rateColumn.textContent = data.freights[0].rate;
-                    } else {
-                        rateColumn.textContent = "N/A";
-                    }
-                })
-                .catch(error => {
-                    console.error("Error fetching freights:", error);
-                    rateColumn.textContent = "Error";
-                });
-            }
         });
     });
 </script>
