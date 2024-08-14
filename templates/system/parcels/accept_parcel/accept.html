@@ -203,6 +203,10 @@
                             <label for="awb_type">awb type</label>
                             {% render_field form.awb_type class+="form-control" %}
                         </div>
+                        <div class="col-md-6 col-lg-6 col-sm-12 col-12">
+                            <label for="freight_rate">Freight Rate</label>
+                            <input type="text" class="form-control" id="id_freight_rate" disabled>
+                        </div>
                     </div>
                 </div>
                 <div class="row">
@@ -453,6 +457,7 @@
                 'awb_type': document.getElementById('id_awb_type').value,
                 'desc': document.getElementById('id_desc').value,
                 'freight': document.getElementById('id_freight').value,
+                'freight_rate': document.getElementById('id_freight_rate').value,
                 'insurance': document.getElementById('id_insurance').value,
                 'awb_pcs': document.getElementById('id_awb_pcs').value,
                 'awb_kg': document.getElementById('id_awb_kg').value,
@@ -538,6 +543,10 @@
                         <div class="col-md-4 col-lg-4 col-sm-4 col-4">
                             <label for="freight">freight</label>
                             <input type="text" disabled class="form-control" id="id_freight" value="${res.freight}">
+                        </div>
+                         <div class="col-md-4 col-lg-4 col-sm-4 col-4">
+                            <label for="freight_rate">freight rate</label>
+                            <input type="text" disabled class="form-control" id="id_freight_rate" value="${res.freight_rate}">
                         </div>
                         <div class="col-md-4 col-lg-4 col-sm-12 col-12">
                             <label for="insurance">insurance</label>
@@ -732,23 +741,23 @@
     document.getElementById('request-key').addEventListener("click", getParcelKeys);
 </script>
 
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const awbTypeField = document.getElementById('id_awb_type');
+        const freightRateField = document.getElementById('id_freight_rate');
         const freightField = document.getElementById('id_freight');
         const chargableWeightField = document.getElementById('id_chargable_weight');
 
-        // Function to calculate freight
+        // Function to calculate freight based on rate and chargable weight
         function calculateFreight(rate, weight) {
             return (rate * weight).toFixed(2);
         }
 
-        // Update freight field whenever AWB Type or Chargable Weight changes
-        function updateFreight() {
+        // Update freight rate and freight fields whenever AWB Type or Chargable Weight changes
+        function updateFreightAndRate() {
             const awbType = awbTypeField.value;
             const chargableWeight = parseFloat(chargableWeightField.value) || 0;
-            
+
             if (awbType) {
                 fetch(`/sifex/get-freight-by-awb-type/?awb_type=${encodeURIComponent(awbType)}`, {
                     headers: {
@@ -759,28 +768,32 @@
                 .then(data => {
                     if (data.freights && data.freights.length > 0) {
                         const rate = parseFloat(data.freights[0].rate);
-                        const freight = calculateFreight(rate, chargableWeight);
-                        freightField.value = freight;
+                        freightRateField.value = rate.toFixed(2);
+                        freightField.value = calculateFreight(rate, chargableWeight);
                     } else if (data.error) {
                         console.error(data.error);
+                        freightRateField.value = 'Error';
                         freightField.value = 'Error';
                     } else {
                         console.error("No freights found for the selected AWB type.");
+                        freightRateField.value = 'N/A';
                         freightField.value = 'N/A';
                     }
                 })
                 .catch(error => {
                     console.error("Error fetching freights:", error);
+                    freightRateField.value = 'Error';
                     freightField.value = 'Error';
                 });
             } else {
-                freightField.value = 'N/A'; // Clear the field if no AWB Type is selected
+                freightRateField.value = 'N/A'; // Clear the field if no AWB Type is selected
+                freightField.value = 'N/A'; // Clear the freight field if no AWB Type is selected
             }
         }
 
-        // Event listeners to trigger the freight calculation
-        awbTypeField.addEventListener('change', updateFreight);
-        chargableWeightField.addEventListener('input', updateFreight);
+        // Event listeners to trigger the freight rate and freight calculation
+        awbTypeField.addEventListener('change', updateFreightAndRate);
+        chargableWeightField.addEventListener('input', updateFreightAndRate);
     });
 </script>
 
