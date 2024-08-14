@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.views.generic import ListView
 from django.contrib.auth.views import PasswordChangeView
 from django.template.loader import get_template
+from django.utils.formats import number_format
 from django.views import View
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
@@ -191,6 +192,7 @@ def accept_parcel(request):
         receiver_country = request.POST.get('receiver_country')
         desc = request.POST.get('desc')
         freight = request.POST.get('freight')
+        freight_rate = request.POST.get('freight_rate')
         insurance = request.POST.get('insurance')
         awb_pcs = request.POST.get('awb_pcs')
         awb_kg = request.POST.get('awb_kg')
@@ -225,6 +227,7 @@ def accept_parcel(request):
             receiver_country=receiver_country,
             desc=desc,
             freight=freight,
+            freight_rate=freight_rate,
             insurance=insurance,
             awb_pcs=awb_pcs,
             awb_kg=awb_kg,
@@ -261,6 +264,7 @@ def accept_parcel(request):
             'receiver_country': parcel.receiver_country,
             'desc': parcel.desc,
             'freight': parcel.freight,
+            'freight_rate': parcel.freight_rate,
             'insurance': parcel.insurance,
             'awb_pcs': parcel.awb_pcs,
             'awb_type': parcel.awb_type,
@@ -1566,6 +1570,10 @@ def generate_invoice_pdf(request, invoice_id):
             return text[:max_length-3] + '...'
         return text
 
+    def format_currency(value):
+        """Format the currency value with commas."""
+        return f"{int(value):,}"
+
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
 
@@ -1630,8 +1638,8 @@ def generate_invoice_pdf(request, invoice_id):
             shorten_text(invoice.origin or '', 8),
             str(item.quantity),
             str(item.chargable_weight),
-            f"Tzs {item.amount_tz}",
-            f"${item.amount_usd}"
+            f"Tzs {format_currency(item.amount_tz)}",
+            f"${format_currency(item.amount_usd)}"
         ])
 
     table = Table(data)
@@ -1656,9 +1664,9 @@ def generate_invoice_pdf(request, invoice_id):
     table.drawOn(p, 30, 350)
 
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(40, 300, f"SUBTOTAL: ${invoice.total_amount_usd}")
-    p.drawString(40, 285, f"TOTAL IN USD: ${invoice.total_amount_usd}")
-    p.drawString(40, 270, f"TOTAL IN TZS: Tzs {invoice.total_amount_tzs}")
+    p.drawString(40, 300, f"SUBTOTAL: ${format_currency(invoice.total_amount_usd)}")
+    p.drawString(40, 285, f"TOTAL IN USD: ${format_currency(invoice.total_amount_usd)}")
+    p.drawString(40, 270, f"TOTAL IN TZS: Tzs {format_currency(invoice.total_amount_tzs)}")
 
     p.drawString(40, 240, "PAYMENT INSTRUCTION:")
     p.setFont("Helvetica", 10)
@@ -2629,14 +2637,12 @@ def edit_invoice_logic(invoice, update_detail_for_invoice, update_status_for_inv
 def get_freight_by_awb(request):
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         awb_type = request.GET.get('awb_type')
-        print(awb_type)
         if awb_type:
             try:
                 # Filter Freight records by matching awb_type
                 freights = Freight.objects.filter(awb_type=awb_type)
                 if freights.exists():
                     freight_data = [{"id": freight.id, "rate": freight.freight_rete} for freight in freights]
-                    print(freight_data)
                     return JsonResponse({"freights": freight_data})
                 else:
                     return JsonResponse({"freights": []})
