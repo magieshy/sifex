@@ -80,6 +80,7 @@ class Masterawb(models.Model):
     receiver_country = models.CharField(max_length=255, blank=True)
     desc = models.CharField(max_length=255, blank=True)
     freight = models.CharField(max_length=255, blank=True)
+    freight_rate = models.CharField(max_length=255, blank=True)
     insurance = models.CharField(max_length=255, blank=True)
     awb_pcs = models.CharField(max_length=255, blank=True)
     awb_kg = models.FloatField(blank=True)
