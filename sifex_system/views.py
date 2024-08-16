@@ -1812,13 +1812,11 @@ def delivered_report(request):
 
         total_undelivered = pcs.count()  # Total delivered AWBs
         total_kg = pcs.aggregate(Sum('awb_kg'))['awb_kg__sum'] or 0  # Total kg of delivered AWBs
-        total_freight = pcs.aggregate(Sum('freight'))['freight__sum'] or 0  # Total freight of delivered AWBs
 
     return render(request, 'system/reports/dlv-reports.html', {
         'pcs': pcs,
         'total_undelivered': total_undelivered,
         'total_kg': total_kg,
-        'total_freight': total_freight,  # Pass the total freight to the template
     })
 
 
@@ -1827,7 +1825,6 @@ def undelivered_report(request):
     pcs = None
     total_undelivered = 0
     total_kg = 0
-    total_freight = 0  # Initialize total freight
 
     if request.method == 'POST':
         date_from = request.POST.get('date_from')
@@ -1841,14 +1838,13 @@ def undelivered_report(request):
 
         total_undelivered = pcs.count()  # Total undelivered AWBs
         total_kg = pcs.aggregate(Sum('awb_kg'))['awb_kg__sum'] or 0  # Total kg of undelivered AWBs
-        total_freight = pcs.aggregate(Sum('freight'))['freight__sum'] or 0  # Total freight of undelivered AWBs
 
     return render(request, 'system/reports/undlv-reports.html', {
         'pcs': pcs,
         'total_undelivered': total_undelivered,
         'total_kg': total_kg,
-        'total_freight': total_freight,  # Pass the total freight to the template
     })
+
 
 
 
