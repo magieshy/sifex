@@ -187,8 +187,8 @@ class Invoice(models.Model):
     origin = models.CharField(max_length=100, null=True)
     date = models.DateField()
     due_date = models.DateField(null=True, blank=True)
-    total_amount_tzs = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
-    total_amount_usd = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
+    total_amount_tzs = models.DecimalField(max_digits=25, decimal_places=2, blank=True, null=True)
+    total_amount_usd = models.DecimalField(max_digits=25, decimal_places=2, blank=True, null=True)
     status = models.CharField(max_length=20, default='unpaid')
     invoice_detail = models.CharField(max_length=20, null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, related_name='issuer_invoices')
@@ -209,9 +209,9 @@ class LineItem(models.Model):
     quantity = models.IntegerField()
     chargable_weight = models.FloatField(null=True)
     awb_kg = models.FloatField(null=True)
-    rate = models.DecimalField(max_digits=9, decimal_places=2)
-    amount_tz = models.DecimalField(max_digits=9, decimal_places=2, null=True)
-    amount_usd = models.DecimalField(max_digits=9, decimal_places=2, null=True)
+    rate = models.DecimalField(max_digits=20, decimal_places=2)
+    amount_tz = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    amount_usd = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     deleted = models.BooleanField(default=False)
 
     def __str__(self):
