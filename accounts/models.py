@@ -8,11 +8,12 @@ from django.dispatch import receiver
 
 
 class User(AbstractUser):
-    wharehouse = models.BooleanField(default=False, verbose_name='wharehouse')
-    acceptance = models.BooleanField(default=False, verbose_name='acceptance')
+    wharehouse = models.BooleanField(default=False, verbose_name='warehouse')
+    acceptance = models.BooleanField(default=False, verbose_name='export')
     importer = models.BooleanField(default=False, verbose_name='import')
-    accountance = models.BooleanField(default=False, verbose_name='accountance')
+    accountance = models.BooleanField(default=False, verbose_name='bill')
     management = models.BooleanField(default=False, verbose_name='management')
+    report = models.BooleanField(default=False, verbose_name='report')
     profile_pic = models.ImageField(upload_to="user/profile/", null=True, blank=True)
 
 
