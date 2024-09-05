@@ -154,7 +154,7 @@ class SlaveCreateForm(ModelForm):
 class UserRoleForm(ModelForm):
     class Meta:
         model = User
-        fields = ('acceptance', 'wharehouse', 'importer', 'accountance', 'management')
+        fields = ('acceptance', 'wharehouse', 'importer', 'accountance', 'management', 'report')
 
 
 
