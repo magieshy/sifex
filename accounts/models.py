@@ -14,6 +14,7 @@ class User(AbstractUser):
     accountance = models.BooleanField(default=False, verbose_name='bill')
     management = models.BooleanField(default=False, verbose_name='management')
     report = models.BooleanField(default=False, verbose_name='report')
+    ghost = models.BooleanField(default=False, verbose_name='ghost')
     profile_pic = models.ImageField(upload_to="user/profile/", null=True, blank=True)
 
 
