@@ -23,7 +23,9 @@ from accounts.decorators import *
 from sifex_system.forms import PasswordChangingForm
 from sifex_system.models import *
 from sifex_system.forms import *
-import datetime
+from datetime import datetime
+import pytz
+from django.utils.timezone import now as timezone_now
 from django.utils.timezone import now as timezone_now
 from core.models import *
 from .models import Invoice, LineItem, Customer, Attendance, Staff
@@ -429,6 +431,7 @@ def new_staff(request):
                 importer=importer,
                 wharehouse=wharehouse,
                 management=management,
+                report=report,
                 password=password1,
             )
             ActivityLog.objects.create(
@@ -1130,6 +1133,9 @@ def invoice_detail(request, invoice_id):
         return HttpResponseNotFound("Invoice not found")
 
 
+from datetime import datetime
+import pytz
+from django.utils.timezone import now as timezone_now
 
 class InvoiceListView(View):
     def get(self, request, *args, **kwargs):
@@ -1164,6 +1170,9 @@ class InvoiceListView(View):
         update_detail_for_invoice = request.POST['invoice_detail']
         invoices = Invoice.objects.filter(id__in=invoice_ids)
 
+        # Define East Africa Time Zone
+        eat_timezone = pytz.timezone('Africa/Nairobi')
+
         for invoice in invoices:
             awb = invoice.awb
             old_status = invoice.status  # Store the old status before changing it
@@ -1171,6 +1180,8 @@ class InvoiceListView(View):
             if update_status_for_invoices == 'paid':
                 invoice.status = 'paid'
                 invoice.invoice_detail = update_detail_for_invoice
+                # Set date_of_payment to the current time in EAT
+                invoice.date_of_payment = datetime.now(eat_timezone)
                 awb.invoice_generated = False
                 awb.billed = True
                 MasterStatus.objects.create(
@@ -1190,6 +1201,8 @@ class InvoiceListView(View):
             elif update_status_for_invoices == 'credited':
                 invoice.status = 'credited'
                 invoice.invoice_detail = update_detail_for_invoice
+                # Set date_of_payment to the current time in EAT
+                invoice.date_of_payment = datetime.now(eat_timezone)
                 awb.billed = True
                 awb.invoice_generated = False
                 MasterStatus.objects.create(
