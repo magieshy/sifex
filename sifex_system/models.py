@@ -186,7 +186,7 @@ class Invoice(models.Model):
     awb = models.ForeignKey(Masterawb, null=True, on_delete=models.CASCADE)
     origin = models.CharField(max_length=100, null=True)
     date = models.DateField()
-    date_of_payment = models.DateField()
+    date_of_payment = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
     total_amount_tzs = models.DecimalField(max_digits=25, decimal_places=2, blank=True, null=True)
     total_amount_usd = models.DecimalField(max_digits=25, decimal_places=2, blank=True, null=True)
