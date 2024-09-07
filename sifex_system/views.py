@@ -23,7 +23,8 @@ from accounts.decorators import *
 from sifex_system.forms import PasswordChangingForm
 from sifex_system.models import *
 from sifex_system.forms import *
-from datetime import datetime
+from datetime import datetime as EastAfricaDateTime
+import datetime
 import pytz
 from django.utils.timezone import now as timezone_now
 from django.utils.timezone import now as timezone_now
@@ -1133,9 +1134,7 @@ def invoice_detail(request, invoice_id):
         return HttpResponseNotFound("Invoice not found")
 
 
-from datetime import datetime
-import pytz
-from django.utils.timezone import now as timezone_now
+
 
 class InvoiceListView(View):
     def get(self, request, *args, **kwargs):
@@ -1181,7 +1180,7 @@ class InvoiceListView(View):
                 invoice.status = 'paid'
                 invoice.invoice_detail = update_detail_for_invoice
                 # Set date_of_payment to the current time in EAT
-                invoice.date_of_payment = datetime.now(eat_timezone)
+                invoice.date_of_payment = EastAfricaDateTime.now(eat_timezone)
                 awb.invoice_generated = False
                 awb.billed = True
                 MasterStatus.objects.create(
@@ -1202,7 +1201,7 @@ class InvoiceListView(View):
                 invoice.status = 'credited'
                 invoice.invoice_detail = update_detail_for_invoice
                 # Set date_of_payment to the current time in EAT
-                invoice.date_of_payment = datetime.now(eat_timezone)
+                invoice.date_of_payment = EastAfricaDateTime.now(eat_timezone)
                 awb.billed = True
                 awb.invoice_generated = False
                 MasterStatus.objects.create(
