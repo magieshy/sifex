@@ -13,7 +13,7 @@ class User(AbstractUser):
     importer = models.BooleanField(default=False, verbose_name='import')
     accountance = models.BooleanField(default=False, verbose_name='bill')
     management = models.BooleanField(default=False, verbose_name='management')
-    report = models.BooleanField(default=False, verbose_name='report')
+    report = models.BooleanField(default=False, verbose_name='report', null=True)
     profile_pic = models.ImageField(upload_to="user/profile/", null=True, blank=True)
 
 
