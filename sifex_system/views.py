@@ -403,6 +403,7 @@ def new_staff(request):
         email = request.POST.get('email')
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
+        report = request.POST.get('report')
         accountance = request.POST.get('accountance')
         acceptance = request.POST.get('acceptance')
         wharehouse = request.POST.get('wharehouse')
