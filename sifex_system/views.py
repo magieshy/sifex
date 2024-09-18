@@ -10,7 +10,7 @@ from django.views import View
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 # from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils.timezone import now as timezone_now
 from django.db.models import Sum, F, FloatField, Value
 from django.db.models.functions import Cast, Replace
@@ -26,8 +26,6 @@ from sifex_system.forms import *
 from datetime import datetime as EastAfricaDateTime
 import datetime
 import pytz
-from django.utils.timezone import now as timezone_now
-from django.utils.timezone import now as timezone_now
 from core.models import *
 from .models import Invoice, LineItem, Customer, Attendance, Staff
 import pdfkit
@@ -403,7 +401,6 @@ def new_staff(request):
         email = request.POST.get('email')
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
-        report = request.POST.get('report')
         accountance = request.POST.get('accountance')
         acceptance = request.POST.get('acceptance')
         wharehouse = request.POST.get('wharehouse')
@@ -1735,14 +1732,29 @@ def list_of_delivered_awb(request):
     )
     return render(request, 'system/reports/delivered-goods.html', {})
 
+
 @login_required
 def list_of_undelivered_awb(request):
+    # Tunatafuta AWBs ambazo hazijafika "delivered" lakini zina status zote
+    undelivered_awbs = Masterawb.objects.filter(
+        delivered=False,  # Hazijafika delivered
+        master_status__status__in=['arrival', 'underclearance', 'released', 'bill', 'invoice paid']
+    ).annotate(
+        status_count=Count('master_status__status', filter=Q(master_status__status__in=['arrival', 'underclearance', 'released', 'bill', 'invoice paid']))
+    ).filter(
+        status_count=5  # Zina hizi status zote 5
+    ).order_by('-date_received')
+
+    # Rekodi kuwa mtumiaji amefungua ukurasa huu
     ActivityLog.objects.create(
         user=request.user,
         activity_type='READ',
-        description='Viewed list of undelivered AWBs'
+        description='Viewed list of undelivered AWBs with status arrival, underclearance, released, bill, and invoice paid'
     )
-    return render(request, 'system/reports/undelivered-goods.html', {})
+    
+    return render(request, 'system/reports/undelivered-goods.html', {
+        'undelivered_awbs': undelivered_awbs
+    })
 
 @login_required
 def list_of_paid_awb(request):
@@ -1834,6 +1846,7 @@ def delivered_report(request):
 
 
 @login_required
+@login_required
 def undelivered_report(request):
     pcs = None
     total_undelivered = 0
@@ -1843,12 +1856,15 @@ def undelivered_report(request):
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
 
-        # Filter for undelivered pcs within the date range
+        # Filter for undelivered pcs within the date range and specific statuses
         pcs = Masterawb.objects.filter(
-            delivered=False,
-            date_received__range=[date_from, date_to]
-        )
+            delivered=False,  # AWBs that are not yet delivered
+            date_received__range=[date_from, date_to]  # Date range filter
+        ).filter(
+            master_status__status__in=['arrived', 'under clearance', 'released', 'invoice credited', 'invoice paid']  # Status filter
+        ).distinct()
 
+        # Calculate total undelivered count and total weight
         total_undelivered = pcs.count()  # Total undelivered AWBs
         total_kg = pcs.aggregate(Sum('awb_kg'))['awb_kg__sum'] or 0  # Total kg of undelivered AWBs
 
@@ -1857,7 +1873,6 @@ def undelivered_report(request):
         'total_undelivered': total_undelivered,
         'total_kg': total_kg,
     })
-
 
 
 
@@ -1870,7 +1885,7 @@ def paid_report(request):
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='paid')
+        invoices = Invoice.objects.filter(date_of_payment__gte=date_from, date_of_payment__lte=date_to, status='paid')
         
         total_invoices = invoices.count()
         total_amount_tzs = invoices.aggregate(total=Sum('total_amount_tzs'))['total'] or 0
@@ -1934,7 +1949,7 @@ def credited_report(request):
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='credited')
+        invoices = Invoice.objects.filter(date_of_payment__gte=date_from, date_of_payment__lte=date_to, status='credited')
         ActivityLog.objects.create(
             user=request.user,
             activity_type='READ',
@@ -1953,7 +1968,7 @@ def unpaid_report(request):
     if request.method == "POST":
         date_from = request.POST.get('date_from')
         date_to = request.POST.get('date_to')
-        invoices = Invoice.objects.filter(date__gte=date_from, date__lte=date_to, status='unpaid')
+        invoices = Invoice.objects.filter(date_of_payment__gte=date_from, date_of_payment__lte=date_to, status='unpaid')
         
         total_invoices = invoices.count()
         total_amount_usd = invoices.aggregate(total_usd=Sum('total_amount_usd'))['total_usd'] or 0
