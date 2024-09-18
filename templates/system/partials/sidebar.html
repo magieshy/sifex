@@ -77,7 +77,9 @@
                 <li class=""><a href="{% url 'invoice-history' %}"><span>Invoice History</span> </a></li>
             </ul>
         </li>
+        {% endif %}
 
+        {% if request.user.report %}
         <!-- report -->
         <li class="submenu">
             <a href="javascript:void(0);"><img src="{% static 'system/assets/img/icons/dashboard.svg' %}" alt="img"><span> REPORTS</span> <span class="menu-arrow"></span></a>
