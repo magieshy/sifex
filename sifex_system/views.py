@@ -1581,8 +1581,8 @@ def generate_invoice_pdf(request, invoice_id):
         return text
 
     def format_currency(value):
-        """Format the currency value with commas."""
-        return f"{int(value):,}"
+        """Format the currency value preserving decimals."""
+        return f"{value:,.2f}"  # Preserve two decimal places
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
@@ -1644,12 +1644,12 @@ def generate_invoice_pdf(request, invoice_id):
         data.append([
             str(idx),
             item.service,
-            f"${item.rate}",
+            f"${format_currency(item.rate)}",  # Preserve decimal places in rate
             shorten_text(invoice.origin or '', 8),
             str(item.quantity),
             str(item.chargable_weight),
-            f"Tzs {format_currency(item.amount_tz)}",
-            f"${format_currency(item.amount_usd)}"
+            f"Tzs {format_currency(item.amount_tz)}",  # Preserve decimal places for amount in TZS
+            f"${format_currency(item.amount_usd)}"  # Preserve decimal places for amount in USD
         ])
 
     table = Table(data)
@@ -1706,6 +1706,7 @@ def generate_invoice_pdf(request, invoice_id):
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="Invoice_{invoice.id}.pdf"'
     return response
+
 
 
 @login_required
