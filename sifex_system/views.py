@@ -2492,6 +2492,7 @@ def edit_user(request, user_id):
         user.importer = 'importer' in request.POST
         user.accountance = 'accountance' in request.POST
         user.management = 'management' in request.POST
+        user.report = 'report' in request.POST
         user.save()
         messages.success(request, 'User updated successfully')
         return redirect(reverse('users'))
